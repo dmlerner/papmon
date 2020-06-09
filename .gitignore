@@ -3,3 +3,6 @@ node_modules*
 tplink-smarthome-api*
 data/*
 cpap-watt*
+*.out
+*.err
+*.debug

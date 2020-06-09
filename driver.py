@@ -1,12 +1,14 @@
 import os
 import time
 import dataclasses
+import sys
 
 def debug(*args, **kwargs):
-    print('>>>', *args, **kwargs)
+    #return
+    print('>>>', *args, **kwargs, file=debug.file)
 
 def now():
-    debug('now')
+    #debug('now')
     return time.time()
 
 def parse_line(line):
@@ -21,7 +23,7 @@ def parse_line(line):
 
 def nowish(t, margin=10):
     debug('nowish', t, now())
-    return abs(t - now()) < margin_s
+    return abs(t - now()) < margin
 
 
 def get_file_tail(f, sleep=.1):
@@ -69,10 +71,12 @@ class PowerDatum:
     energy: float # joules
 
 def is_wearing(power_data, lookback_s=10):
-    debug('is_wearing')
+    debug('is_wearing', power_data[:5])
     # TODO: detect oscillation? 
     # for now, look for wattage over cutoff
     joules = 0
+    if not len(power_data) >= 2:
+        return 
     for d in reversed(power_data):
         if abs(d.time - now()) > lookback_s:
             break
@@ -83,6 +87,7 @@ def is_wearing(power_data, lookback_s=10):
     return average_power >= cutoff_power
 
 def check():
+    debug('check')
     power_data = []
     with open(data_path, 'r') as f:
         previous_seconds = None
@@ -94,10 +99,12 @@ def check():
             previous_seconds = seconds
 
 def main():
-    debug('main')
-    poll_thread = start_power_polling()
-    # TODO: close poll ever? 
-    check()
+    with open('driver.debug', 'a') as f:
+        debug.file = f
+        debug('main')
+        start_power_polling()
+        # TODO: close poll ever? 
+        check()
 
 
 if __name__ == '__main__':
