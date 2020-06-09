@@ -12,3 +12,30 @@ can have any notification sound
 	https://www.androidauthority.com/set-own-music-mp3-custom-notification-ringtone-166052/
 maybe some day use home assistant to chromecast to speaker
 	premium version 'nabucasa' $5/mo may simplify
+...........
+chromecast some audio to bedroom speaker
+	already proof of concepted doing this
+	for now just play local music from thinkpad
+javascript
+	on device-new
+		find device named resmed
+	poll and output (time, wattage) only to file
+	restart self if no resmed after a few minutes?
+daemon
+	eventually have crontab make sure javascript/python keeps running
+	needs some windows startup thing to get the crontab running
+python
+	read file 
+		need to avoid slowing down as file gets long
+		if we just back up file once a day is that sufficient?
+	if should_wakeup
+		have used cpap for at least ten minutes
+		after 11pm
+		before 6am
+		no optional at all to just not use? 
+			'hey google desktop off' will in fact work...
+	do wakeup
+installation
+	cd /mnt/c/Users/david/google-drive/coding/cpapwakeup
+	npm i tplink-smarthome-api
+	node test.js
