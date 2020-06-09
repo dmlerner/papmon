@@ -1,0 +1,14 @@
+python runs every few minutes monitoring hs110 smartplug power usage
+if detects mask off
+send slack notification
+curl -X POST -H 'Content-type: application/json' --data '{"text":"Hello, World!"}' https://hooks.slack.com/services/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
+slack app can be exempted from do not disturb
+hear on phone
+	still annoying to have to keep it by bed but w/e
+can have any notification sound
+	eg a long thing
+	by copying to /storage/emulated/0/Android/media/com.Slack/Notifcations/Slack
+	or similar
+	https://www.androidauthority.com/set-own-music-mp3-custom-notification-ringtone-166052/
+maybe some day use home assistant to chromecast to speaker
+	premium version 'nabucasa' $5/mo may simplify
