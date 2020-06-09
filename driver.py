@@ -3,6 +3,7 @@ import vlc
 import time
 import dataclasses
 import sys
+from sortedcollection import SortedCollection
 
 def debug(*args, **kwargs):
     #return
@@ -27,42 +28,16 @@ def nowish(t, margin=10):
     return abs(t - now()) < margin
 
 
-def get_file_tail(f, sleep=.1):
+def get_read_generator(f, sleep=.1):
     debug('get_file_tail')
     # https://stackoverflow.com/questions/5419888/reading-from-a-frequently-updated-file
-    f.seek(0,2) # WTF
+    #f.seek(0,2) # WTF
     while True:
         line = f.readline()
         if not line:
             time.sleep(sleep)
             continue
         yield line
-
-def seek_to_now(f, sleep=.1, margin=10):
-    debug('seek_to_now')
-    skipped = 0
-    for line in get_file_tail(f, sleep):
-        seconds, watts = parse_line(line)
-        if not nowish(seconds, margin):
-            skipped += 1
-            continue
-        skipped = 0
-        if skipped:
-            debug('skipped', skipped)
-        yield seconds, watts
-
-data_path = 'data/resmed'
-
-def start_power_polling():
-    debug('start_power_polling')
-    # TODO check if ./data/resmed exists
-    # TODO new file per day etc
-    # begin writing (time in ms, wattage in milliwatts) 
-    command = 'node poll.js'
-    #subprocess.Popen(command.split(), stdout=subprocess.PIPE) # does not temrinate with script
-    #return threading.Thread(target=lambda:os.system(command)).run()
-    #os.system(command) # blocks
-
 
 
 @dataclasses.dataclass
@@ -71,48 +46,87 @@ class PowerDatum:
     power: float # watts
     energy: float # joules
 
-def is_wearing(power_data, lookback_s=10):
-    debug('is_wearing', power_data[:5])
-    # TODO: detect oscillation? 
-    # for now, look for wattage over cutoff
-    joules = 0
+def average_power(power_data, start, stop):
+    time, energy = get_time_and_energy(power_data, start, stop)
+    return energy / time
+
+def get_energy(power_data, start, stop):
+    return get_time_and_energy(power_data, start, stop)[1]
+
+def get_time_and_energy(power_data, start, stop):
+    energy = 0
     if not len(power_data) >= 2:
-        return 
-    for d in reversed(power_data):
-        if abs(d.time - now()) > lookback_s:
-            break
-        joules += d.energy
-    duration = power_data[-1].time - d.time # should be ~= lookback_s
-    average_power = joules / duration
-    cutoff_power = 10
-    return average_power >= cutoff_power
+        return None
+    start_index = power_data.find_gt(now() - start)
+    stop_index = power_data.find_lt(now() - stop)
+    start_datum = power_data[start_index]
+    start_time = start_datum.time
+    for datum in power_data[start_index: stop_index]:
+        dt = datum.time - start_datum.time
+        power = (datum.power + start_datum.power) / 2
+        energy += power * dt
+    elapsed_time = datum.time - start_time
+    return elapsed_time, energy
 
 def check():
     debug('check')
-    power_data = []
+    power_data = SortedCollection(key=lambda d: d.time)
+    data_path = 'data/resmed'
     with open(data_path, 'r') as f:
-        previous_seconds = None
-        for seconds, watts in seek_to_now(f):
-            if previous_seconds:
-                assert seconds >= previous_seconds
-                power_data.append(PowerDatum(seconds, watts, watts*(seconds - previous_seconds))) # TODO Saveable? 
-                handle_wearing(power_data)
-            previous_seconds = seconds
+        for line in get_read_generator(f):
+            seconds, watts = parse_line(line)
+            power_data.insert(PowerDatum(seconds, watts)) # TODO Saveable? 
+            handle_wearing(power_data)
 
 def play_audio_alarm():
     vlc = '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
     filename = 'poet.mp3'
     os.system(vlc + ' ' + filename)
 
+def in_active_period(t, start_str='23:00', stop_str='6:00'):
+    start = map(int, start_str.split(':'))
+    stop = map(int, stop_str.split(':'))
+    now = datetime.datetime.now().hour, datetime.datetetime.now().minute
+    if start > stop: # midnight is between start and stop
+        return now > start \ # before midnight
+                or now < stop # after midnight
+    return start < now < stop
+
+# TODO: input/output/etc decorator
+def is_system_active(start_str='23:00', stop_str='6:00'):
+    # TODO: double check this logic
+    debug('is_system_active', start_str, stop_str)
+    return in_active_period(now())
+
+def get_recent_wearing_period(power_data, window=600):
+    ''' Gets the PowerData at both ends '''
+    pass
+
+def wearing_started(power_data, window=600):
+    # TODO tI got bored mid writing this
+    # TODO: speed up with sliding window; numpy? 
+    # start at end and work backwords until hit wake time? 
+    # clearly need a class for settings like wake time...
+    start_datum, stop_datum = get_recent_wearing(power_data, window)
+    return in_active_period(stop_datum.time)
+
+def wearing_now(power_data):
+    return check_wearing_by_wattage(power_data, start=now()-10)
+
+def check_wearing_by_wattage(power_data, wattage=10, start=None, stop=None):
+    start = start or power_data[0].time
+    stop = stop or now()
+    return average_power(power_data, start, stop) > wattage
+
 def handle_wearing(power_data):
     debug('handle_wearing')
+    if not is_system_active():
+        return
+    if not wearing_started(power_data):
+        return
+    if wearing_now(power_data):
+        return
     play_audio_alarm()
-    if before_start_time():
-        return
-    if after_wake_time():
-        return
-    if not started_wearing(power_data):
-        return
 
 def main():
     with open('driver.debug', 'a') as f:
