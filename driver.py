@@ -1,4 +1,5 @@
 import os
+import vlc
 import time
 import dataclasses
 import sys
@@ -95,15 +96,33 @@ def check():
             if previous_seconds:
                 assert seconds >= previous_seconds
                 power_data.append(PowerDatum(seconds, watts, watts*(seconds - previous_seconds))) # TODO Saveable? 
-                print(is_wearing(power_data))
+                handle_wearing(power_data)
             previous_seconds = seconds
+
+def play_audio_alarm():
+    vlc = '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
+    filename = 'poet.mp3'
+    os.system(vlc + ' ' + filename)
+
+def handle_wearing(power_data):
+    debug('handle_wearing')
+    play_audio_alarm()
+    if before_start_time():
+        return
+    if after_wake_time():
+        return
+    if not started_wearing(power_data):
+        return
 
 def main():
     with open('driver.debug', 'a') as f:
         debug.file = f
         debug('main')
-        start_power_polling()
+
+        # manage via common run.sh instead
+        # start_power_polling()
         # TODO: close poll ever? 
+
         check()
 
 

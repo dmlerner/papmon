@@ -6,3 +6,4 @@ cpap-watt*
 *.out
 *.err
 *.debug
+__*
