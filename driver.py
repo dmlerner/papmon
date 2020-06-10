@@ -9,6 +9,7 @@ import datetime
 def debug(*args, **kwargs):
     #return
     print(*args, **kwargs, file=debug.file)
+    print(*args, **kwargs)
 
 def now():
     #debug('now')
@@ -85,10 +86,12 @@ def check():
             power_data.insert(PowerDatum(seconds, watts)) # TODO Saveable? 
             handle_wearing(power_data)
 
+playing = False
 def play_audio_alarm():
     debug('playing audio alarm')
     vlc = '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
     filename = 'poet.mp3'
+playing = True
     os.system(vlc + ' ' + filename)
 
 def in_active_period(t, start_str='23:00', stop_str='6:00'):
