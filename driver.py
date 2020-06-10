@@ -56,7 +56,7 @@ def get_energy(power_data, start, stop):
     return get_time_and_energy(power_data, start, stop)[1]
 
 def get_time_and_energy(power_data, start, stop):
-    print('get_time_and_energy')
+    debug('get_time_and_energy')
     try:
         energy = 0
         if not len(power_data) >= 2:
@@ -86,6 +86,7 @@ def check():
             handle_wearing(power_data)
 
 def play_audio_alarm():
+    debug('playing audio alarm')
     vlc = '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
     filename = 'poet.mp3'
     os.system(vlc + ' ' + filename)
@@ -129,10 +130,13 @@ def handle_wearing(power_data):
     debug('handle_wearing')
     if not is_system_active():
         return
+    debug('system is active')
     if not wearing_started(power_data):
         return
+    debug('wearing is started')
     if wearing_now(power_data):
         return
+    debug('not wearing now')
     play_audio_alarm()
 
 def main():
