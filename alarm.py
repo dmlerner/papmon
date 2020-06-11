@@ -1,13 +1,11 @@
 from utils import *
+import os
 
-playing = False
 def play_audio_alarm():
     debug('play_audio_alarm')
-    if playing:
-        return
-    debug('playing audio alarm')
     vlc = '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
-    filename = 'poet.mp3'
-    playing = True
+    filename = '_poet.mp3'
+    debug('let"s not actually play that seems annoying')
+    return
     os.system(vlc + ' ' + filename)
 

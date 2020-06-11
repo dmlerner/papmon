@@ -200,6 +200,11 @@ class SortedCollection(object):
     def find_gt_index(self, k):
         return self.index(self.find_gt(k))
 
+    def min(self):
+        return self[0]
+    def max(self):
+        return self[-1]
+
     def __getitem__(self, i):
         if isinstance(i, slice):
             sc = self.__class__( key=self._key )

@@ -8,7 +8,7 @@ function getTime() {
 }
 
 function write(x) {
-	var timestamp = getTime();
+	var timestamp = getTime() / 1000; // seconds since epoch
 	var path = 'data/resmed';
 	fs.appendFile(
 		path, 
@@ -24,7 +24,7 @@ function pollWriteWattage(device) {
 	}
 	var poll = device.startPolling(100); // ms 
 	poll.on('emeter-realtime-update', (update) => {
-		write(update.power_mw);
+		write(update.power_mw / 1000); // write wattage
 	});
 }
 
