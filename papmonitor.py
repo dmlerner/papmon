@@ -1,21 +1,36 @@
 from utils import *
-from power import *
+import datetime
+import power
+import alarm
 
 class PAPMonitor:
     def __init__(self, data_path, start, stop):
         self.file = open(data_path, 'r')
-        self.power_data = PowerData()
+        self.power_data = power.PowerData()
         self.start = start
         self.stop = stop
 
-    def build(self, data_path, start_str, stop_str):
-        start, stop = parse_start_stop(start_str, stop_str)
+    @staticmethod
+    def parse_time_str(s):
+        return datetime.time(*map(int, s.split(':')))
+
+
+    @staticmethod
+    def check_exists(path):
         #if not os.path.exists(os.path.getfolder(data_path)):
         # os.path.makefolder()
+        # TODO
+        pass
+
+    @staticmethod
+    def build(data_path, start_str, stop_str):
+        start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
+        PAPMonitor.check_exists(data_path) # TODO move to utils
         return PAPMonitor(data_path, start, stop)
 
+
     def close(self):
-        if self.flie:
+        if self.file:
             self.file.close()
             self.file = None
 
@@ -32,18 +47,18 @@ class PAPMonitor:
             self.monitor()
 
     def alarm_on(self):
-        return self.in_active_period(now())
+        ''' May check additional criteria, eg phone is at home '''
+        return self.in_active_period()
 
-    def in_active_period(self, t):
-        start = tuple(map(int, start_str.split(':')))
-        stop = tuple(map(int, stop_str.split(':')))
-        now = datetime.datetime.now().hour, datetime.datetime.now().minute
+    def in_active_period(self, t=None):
+        t = t or now_time()
+        t, start, stop = map(on_today, (t, self.start, self.stop))
         if start > stop: # midnight is between start and stop
-            return now > start or now < stop 
-        return start < now < stop
+            return t >= start or t <= stop 
+        return start <= t <= stop
 
     def trigger_alarm(self):
-        play_audio_alarm()
+        alarm.play_audio_alarm()
 
     def check_and_handle_wearing(self):
         debug('handle_wearing')
@@ -81,3 +96,10 @@ class PAPMonitor:
         start = start or self.power_data[0].time
         stop = stop or now()
         return power.average_power(power_data, start, stop) > wattage
+
+if __name__ == '__main__':
+    p = PAPMonitor.build('data/resmed', '23:00', '6:00')
+    p.close()
+    for h in range(24):
+        print(h, p.in_active_period(datetime.time(h, 1)))
+    print(vars(p))

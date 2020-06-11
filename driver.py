@@ -10,22 +10,6 @@ from utils import *
 from papmonitor import PAPMonitor
 
 
-def now():
-    #debug('now')
-    return time.time()
-
-def parse_line(line):
-    time_ms, power_mw = map(int, line.split()) # use in prod
-    #power_mw, time_ms = map(int, line.split()) # old data file is backwards
-
-    # sanity check on input order
-    assert time_ms > power_mw
-
-    return time_ms/1000, power_mw/1000
-
-def nowish(t, margin=10):
-    debug('nowish', t, now())
-    return abs(t - now()) < margin
 
 
 def get_read_generator(f, sleep=.1):
@@ -38,13 +22,6 @@ def get_read_generator(f, sleep=.1):
             time.sleep(sleep)
             continue
         yield line
-
-
-def check():
-    debug('check')
-    with open(data_path, 'r') as f:
-        pass
-
 
 def main():
     debug('main')
