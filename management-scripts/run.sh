@@ -1,5 +1,3 @@
 #!/usr/bin/sh
-echo "running poll"
-node poll.js > poll.out 2> poll.err &
-echo "running driver"
-python3 driver.py > driver.out 2> driver.err &
+node poll.js 2> poll.err &
+python3 -m papmonitor 2> papmonitor.err &

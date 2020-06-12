@@ -8,3 +8,4 @@ cpap-watt*
 *.debug
 __pycache__
 papmonitor/logs
+*.swo

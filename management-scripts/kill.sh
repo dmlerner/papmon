@@ -1,2 +1,3 @@
 #1/usr/bin/bash
-lsof | ag node.*poll.out | head -n 1 | sed -e 's/node *//' | sed -e 's/ .*//' | xargs kill -9
+pgrep node.*poll-plug.js -f | xargs kill -9
+pgrep python3.*papmonitor -f | xargs kill -9
