@@ -5,7 +5,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from .sortedcollection import SortedCollection
-from .utils import *
+from .utils import utils
 
 @dataclass
 class PowerDatum:
@@ -33,9 +33,9 @@ class EnergyDatum(PowerDatum):
 
     @staticmethod
     def build(pd1, pd2):
-        elapsed_time = get_elapsed_time(pd1, pd2)
-        average_power = average(pd1.power, pd2.power)
-        average_timestamp = average(pd1.timestamp, pd2.timestamp)
+        elapsed_time = utils.get_elapsed_time(pd1, pd2)
+        average_power = utils.average(pd1.power, pd2.power)
+        average_timestamp = utils.average(pd1.timestamp, pd2.timestamp)
         energy = average_power * elapsed_time.total_seconds()
         return EnergyDatum(
                 average_timestamp,
@@ -63,7 +63,7 @@ class PowerData(SortedCollection):
         prefixes = self.get_energy_prefix_sums(start, stop)[-1].energy
 
     def check_bounds(self, start, stop):
-        logger.debug('check_bounds', self, start, stop)
+        logger.debug('check_bounds %s %s %s', self, start, stop)
         if not self:
             raise ValueError('empty power data')
         if start > self.max().timestamp:
@@ -78,16 +78,16 @@ class PowerData(SortedCollection):
         except ValueError:
             return PowerData()
         start_index = self.find_ge_index(start) 
-        logger.debug('start_index', start_index)
+        logger.debug('start_index %s', start_index)
         stop_index = self.find_le_index(stop) 
-        logger.debug('stop_index', stop_index)
+        logger.debug('stop_index %s', stop_index)
         return PowerData(EnergyDatum.build(*self[i: i+2])  # TODO: EnergyData?
                 for i in range(start_index, stop_index - 1))
 
     def get_energy_prefix_sums(self, start, stop):
-        logger.debug('start, stop', start, stop)
+        logger.debug('start, stop %s %s', start, stop)
         energies = self.get_energies(start, stop)
-        logger.debug('energies', energies)
+        logger.debug('energies %s', energies)
         for i in range(1, len(energies)):
             energies[i].energy += energies[i-1].energy
         return energies
@@ -103,19 +103,19 @@ class PowerData(SortedCollection):
 
     def get_power_by_start_time(self, start, stop, window_duration):
         prefix_sums = self.get_energy_prefix_sums(start, stop)
-        logger.debug('prefix_sums', prefix_sums)
+        logger.debug('prefix_sums %s', prefix_sums)
         power_by_start_time = {}
         for start_e in prefix_sums:
             try:
                 stop_e = prefix_sums.find_le(start_e.timestamp + window_duration)
             except ValueError:
                 break
-            duration = get_elapsed_time(start_e, stop_e)
+            duration = utils.get_elapsed_time(start_e, stop_e)
             if duration.total_seconds() == 0:
-                logger.debug('duration 0, is?', start_e is stop_e)
+                logger.debug('duration 0, is? %s', start_e is stop_e)
                 continue
             energy = stop_e.energy - start_e.energy
             average_power = energy/duration.total_seconds()
             power_by_start_time[start_e.timestamp] = average_power
-        logger.debug('power_by_start_time', power_by_start_time)
+        logger.debug('power_by_start_time %s', power_by_start_time)
         return power_by_start_time

@@ -1,3 +1,3 @@
 #!/usr/bin/sh
-'./kill.sh'
-'./run.sh'
+'./management-scripts/kill.sh'
+'./management-scripts/run.sh'

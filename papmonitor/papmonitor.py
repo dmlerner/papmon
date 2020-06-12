@@ -13,7 +13,8 @@ from . import alarm
 from .utils.utils import *
 
 class PAPMonitor:
-    window_duration = datetime.timedelta(minutes=10)
+    #window_duration = datetime.timedelta(minutes=10)
+    window_duration = datetime.timedelta(seconds=10)
     cutoff_power = 10
 
     def __init__(self, f, start, stop):
