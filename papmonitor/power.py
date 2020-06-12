@@ -1,13 +1,8 @@
 from dataclasses import dataclass
-from utils import *
-import sortedcollection
+import datetime
 
-def get_elapsed_time(a, b):
-    return abs(a.timestamp - b.timestamp)
-
-def average(a, b):
-    # avoids adding datetimes
-    return min(a, b) + abs(a - b) / 2
+from .sortedcollection import SortedCollection
+from .utils import *
 
 @dataclass
 class PowerDatum:
@@ -44,7 +39,7 @@ class EnergyDatum(PowerDatum):
                 average_power,
                 energy)
 
-class PowerData(sortedcollection.SortedCollection):
+class PowerData(SortedCollection):
     def __str__(self):
         return 'PowerData ' + str(list(self[:5])) + '...' + str(len(self))
     # TODO: saveable? 

@@ -1,10 +1,11 @@
-from utils import *
 import random
 import time
 import datetime
-import power
-import alarm
 import contextlib
+
+from . import power
+from . import alarm
+from .utils import *
 
 class PAPMonitor:
     window_duration = datetime.timedelta(minutes=10)

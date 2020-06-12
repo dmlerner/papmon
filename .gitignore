@@ -7,3 +7,4 @@ cpap-watt*
 *.err
 *.debug
 __*
+papmonitor/logs

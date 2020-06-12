@@ -1,4 +1,3 @@
-from utils import *
 import os
 
 def play_audio_alarm():

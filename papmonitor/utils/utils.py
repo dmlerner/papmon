@@ -1,11 +1,5 @@
 import datetime
 
-def debug(*args, **kwargs):
-    # TODO: use built in logging library
-    #return
-    #print(*args, **kwargs, file=debug.file)
-    print('>>>', *args, **kwargs)
-
 # TODO: mkdir utils with time.py? 
 def get_time(t):
     return t if type(t) is datetime.time else t.time()
@@ -30,3 +24,10 @@ def nowish(t, margin_s=10):
     return abs(t - now) < datetime.timedelta(seconds=margin_s)
 
 ONE_DAY = datetime.timedelta(days=1)
+
+def get_elapsed_time(a, b):
+    return abs(a.timestamp - b.timestamp)
+
+def average(a, b):
+    # avoids adding datetimes
+    return min(a, b) + abs(a - b) / 2
