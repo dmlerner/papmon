@@ -2,14 +2,11 @@ const { Client } = require('tplink-smarthome-api');
 var fs = require('fs');
 const EventEmitter = require('events');
 
-function getTime() {
-	var d = new Date();
-	return d.getTime();
-}
+const filename = (new Date()).toISOString();
 
 function write(x) {
-	var timestamp = getTime() / 1000; // seconds since epoch
-	var path = 'data/resmed';
+	var timestamp = (new Date()).getTime() / 1000; // seconds since epoch
+	var path = 'data/power/' + filename;
 	fs.appendFile(
 		path, 
 		timestamp + ' ' + x + '\n',

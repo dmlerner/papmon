@@ -1,4 +1,5 @@
 import random
+import glob
 import pathlib
 import time
 import datetime
@@ -37,11 +38,15 @@ class PAPMonitor:
         return path # TODO rename
 
     @staticmethod
-    def build(data_path_relative, start_str, stop_str):
+    def get_latest_data():
+        package_folder = str(pathlib.Path(__file__).parent.absolute())
+        data_path = glob.glob(str(package_folder) + '/../data/power/*')[-1]
+        return open(data_path, 'r') 
+
+    @staticmethod
+    def build(start_str, stop_str):
         start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
-        package_folder = pathlib.Path(__file__).parent.absolute()
-        data_path = '%s/%s' % (package_folder, data_path_relative)
-        f = PAPMonitor.open_or_create(data_path) # TODO move to utils
+        f = PAPMonitor.get_latest_data()
         return PAPMonitor(f, start, stop)
 
     @staticmethod

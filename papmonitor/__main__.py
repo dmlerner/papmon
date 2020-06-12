@@ -44,7 +44,7 @@ def main(arg_str=None):
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build('../data/resmed', '23:00', '6:00')) as pm:
+    with contextlib.closing(PAPMonitor.build('23:00', '6:00')) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':

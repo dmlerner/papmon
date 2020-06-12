@@ -1,2 +1,2 @@
 #!/usr/bin/sh
-rm -f *.debug *.out *.err
+rm -f ../data/power/* ../papmonitor/logs/*
