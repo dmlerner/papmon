@@ -11,19 +11,31 @@ def get_args(arg_str=None):
     argparser = argparse.ArgumentParser()
     argparser.add_argument('log',
             help='debug|info|warning|error|critical',
-            default='info',
-            nargs='?'
+            default='debug',
+            nargs='?',
             )
+    argparser.add_argument('logfile',
+        help='stdout|timestamp',
+        default='timestamp',
+        nargs='?',
+    )
     return argparser.parse_args(arg_str) 
 
-def init_logging(args):
+def get_log_filename(args):
+    if args.logfile == 'stdout':
+        return None
     package_folder = pathlib.Path(__file__).parent.absolute()
     now = datetime.datetime.now().isoformat()
+    return '%s/logs/%s.log' % (package_folder, now)
+
+def get_log_format(args):
+    return '%(relativeCreated)-7d|%(levelname)-7s|%(module)-10s|%(lineno)-4d|%(funcName)-35s|%(message)s'
+
+def init_logging(args):
     logging.basicConfig(
-            filename='%s/logs/%s.log' % (package_folder, now),
+            filename=get_log_filename(args),
             level=getattr(logging, args.log.upper(), None),
-            format=f'%(asctime)-25s:%(levelname)-10s:%(message)s',
-            datefmt="%Y-%m-%dT%H:%M:%S%z",
+            format=get_log_format(args),
             )
 
 def main(arg_str=None):
@@ -31,7 +43,7 @@ def main(arg_str=None):
     init_logging(args)
     logger = logging.getLogger(__name__)
     logger.debug('main')
-    foo
+    logger.debug(args)
     with contextlib.closing(PAPMonitor.build('../data/resmed', '23:00', '6:00')) as pm:
         pm.poll_monitor()
 

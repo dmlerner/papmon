@@ -1,6 +1,9 @@
 from dataclasses import dataclass
 import datetime
 
+import logging
+logger = logging.getLogger(__name__)
+
 from .sortedcollection import SortedCollection
 from .utils import *
 
@@ -60,7 +63,7 @@ class PowerData(SortedCollection):
         prefixes = self.get_energy_prefix_sums(start, stop)[-1].energy
 
     def check_bounds(self, start, stop):
-        print('check_bounds', self, start, stop)
+        logger.debug('check_bounds', self, start, stop)
         if not self:
             raise ValueError('empty power data')
         if start > self.max().timestamp:
@@ -75,16 +78,16 @@ class PowerData(SortedCollection):
         except ValueError:
             return PowerData()
         start_index = self.find_ge_index(start) 
-        print('start_index', start_index)
+        logger.debug('start_index', start_index)
         stop_index = self.find_le_index(stop) 
-        print('stop_index', stop_index)
+        logger.debug('stop_index', stop_index)
         return PowerData(EnergyDatum.build(*self[i: i+2])  # TODO: EnergyData?
                 for i in range(start_index, stop_index - 1))
 
     def get_energy_prefix_sums(self, start, stop):
-        print('start, stop', start, stop)
+        logger.debug('start, stop', start, stop)
         energies = self.get_energies(start, stop)
-        print('energies', energies)
+        logger.debug('energies', energies)
         for i in range(1, len(energies)):
             energies[i].energy += energies[i-1].energy
         return energies
@@ -100,7 +103,7 @@ class PowerData(SortedCollection):
 
     def get_power_by_start_time(self, start, stop, window_duration):
         prefix_sums = self.get_energy_prefix_sums(start, stop)
-        print('prefix_sums', prefix_sums)
+        logger.debug('prefix_sums', prefix_sums)
         power_by_start_time = {}
         for start_e in prefix_sums:
             try:
@@ -109,10 +112,10 @@ class PowerData(SortedCollection):
                 break
             duration = get_elapsed_time(start_e, stop_e)
             if duration.total_seconds() == 0:
-                print('duration 0, is?', start_e is stop_e)
+                logger.debug('duration 0, is?', start_e is stop_e)
                 continue
             energy = stop_e.energy - start_e.energy
             average_power = energy/duration.total_seconds()
             power_by_start_time[start_e.timestamp] = average_power
-        print('power_by_start_time', power_by_start_time)
+        logger.debug('power_by_start_time', power_by_start_time)
         return power_by_start_time

@@ -1,5 +1,8 @@
 import datetime
 
+import logging
+logger = logging.getLogger(__name__)
+
 # TODO: mkdir utils with time.py? 
 def get_time(t):
     return t if type(t) is datetime.time else t.time()
@@ -13,6 +16,7 @@ def now_time():
     return now_datetime().time()
 
 def now_datetime():
+    logger.debug('')
     return datetime.datetime.now()
 
 def nowish(t, margin_s=10):

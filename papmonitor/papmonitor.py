@@ -1,11 +1,15 @@
 import random
+import pathlib
 import time
 import datetime
 import contextlib
 
+import logging
+logger = logging.getLogger(__name__)
+
 from . import power
 from . import alarm
-from .utils import *
+from .utils.utils import *
 
 class PAPMonitor:
     window_duration = datetime.timedelta(minutes=10)
@@ -33,10 +37,12 @@ class PAPMonitor:
         return path # TODO rename
 
     @staticmethod
-    def build(data_path, start_str, stop_str):
+    def build(data_path_relative, start_str, stop_str):
         start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
-        PAPMonitor.open_or_create(data_path) # TODO move to utils
-        return PAPMonitor(data_path, start, stop)
+        package_folder = pathlib.Path(__file__).parent.absolute()
+        data_path = '%s/%s' % (package_folder, data_path_relative)
+        f = PAPMonitor.open_or_create(data_path) # TODO move to utils
+        return PAPMonitor(f, start, stop)
 
     @staticmethod
     def build_fake(start_str, stop_str, n, should_trigger):
@@ -105,18 +111,18 @@ class PAPMonitor:
         self.alarm_going_off = True
 
     def check_and_handle_wearing(self):
-        debug('handle_wearing')
+        logger.debug('handle_wearing')
         if self.alarm_going_off:
             return
         if not self.alarm_on():
             return
-        debug('alarm is on')
+        logger.debug('alarm is on')
         if not self.worn_in_active_period():
             return
-        debug('wearing is started')
+        logger.debug('wearing is started')
         if self.wearing_now():
             return
-        debug('not wearing now')
+        logger.debug('not wearing now')
         self.trigger_alarm()
 
 
