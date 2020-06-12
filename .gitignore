@@ -6,5 +6,5 @@ cpap-watt*
 *.out
 *.err
 *.debug
-__*
+__pycache__
 papmonitor/logs

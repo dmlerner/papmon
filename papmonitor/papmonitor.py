@@ -30,6 +30,7 @@ class PAPMonitor:
         # TODO
         if type(path) is str:
             return open(path, 'r')
+        return path # TODO rename
 
     @staticmethod
     def build(data_path, start_str, stop_str):
