@@ -1,6 +1,6 @@
 #!/usr/bin/sh
 here=$(dirname $(realpath $0))
-echo 'kill'
+#echo 'kill'
 $here/kill.sh;
 echo 'poll-plug.js'
 node $here/../poll-plug.js 2> $here/poll.err &

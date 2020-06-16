@@ -3,7 +3,7 @@ recent(){
        	echo $1/$(ls $1 | tail -n 1) 
 }
 tailRecent(){
-       	recent $1 | xargs tail -n 3 
+       	recent $1 | xargs tail -n 30
 }
 vimRecent(){
 	vim $(recent $1)

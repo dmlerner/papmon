@@ -16,7 +16,7 @@ def now_time():
     return now_datetime().time()
 
 def now_datetime():
-    logger.debug('')
+    #logger.debug('')
     return datetime.datetime.now()
 
 def nowish(t, margin_s=10):

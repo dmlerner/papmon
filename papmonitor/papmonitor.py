@@ -19,7 +19,9 @@ class PAPMonitor:
             cutoff_power = 10,
             ):
         self.file = f
-        self.power_data = power.PowerData()
+        self.power_data = power.PowerData(
+                #[power.PowerDatum(datetime.datetime.now(), 0)]
+                ) # need timestamp for staleness check
         self.start = start
         self.stop = stop
         self.alarm_going_off = False
@@ -46,9 +48,8 @@ class PAPMonitor:
     @staticmethod
     def build(start_str, stop_str, window_duration):
         start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
-        f = PAPMonitor.get_latest_data()
         window_duration = PAPMonitor.parse_window_duration(window_duration)
-        return PAPMonitor(f, start, stop, window_duration)
+        return PAPMonitor(None, start, stop, window_duration)
 
     @staticmethod
     def parse_window_duration(d):
@@ -66,11 +67,11 @@ class PAPMonitor:
     @staticmethod
     def build_fake(should_trigger):
         now = datetime.datetime.now()
-        start = (now - datetime.timedelta(hours=2)).strftime('%H:%m')
+        start = (now - datetime.timedelta(hours=2)).strftime('%H:%M')
         if should_trigger:
-            stop = (now + datetime.timedelta(hours=1)).strftime('%H:%m')
+            stop = (now + datetime.timedelta(hours=1)).strftime('%H:%M')
         else:
-            stop = (now - datetime.timedelta(hours=1)).strftime('%H:%m')
+            stop = (now - datetime.timedelta(hours=1)).strftime('%H:%M')
         return PAPMonitor(get_fake_file(should_trigger), start, stop)
 
     def close(self):
@@ -81,6 +82,9 @@ class PAPMonitor:
             self.file = None
 
     def load_next_datum(self):
+        if self.file is None:
+            logger.debug('PAPMonitor.file is None')
+            raise StopIteration('PAPMonitor.file is None')
         line = next(self.file)
         logger.debug('datum loaded for line: %s', line)
         datum = power.PowerDatum.parse_line(line)
@@ -88,26 +92,42 @@ class PAPMonitor:
         self.power_data.insert(datum)
         return datum
 
+    def should_reload(self):
+        logger.debug('')
+        if self.file is None:
+            return True
+        if self.file.name != self.get_latest_data_path():
+            return True
+
+    def reload(self):
+        logger.info('')
+        self.close()
+        self.file = PAPMonitor.get_latest_data()
+
     def load_data(self):
+        if self.should_reload():
+            self.reload()
         data = power.PowerData()
         while True:
             try:
-                data.insert(self.load_next_datum())
+                datum = self.load_next_datum()
+                data.insert(datum)
             except StopIteration as e:
                 logger.debug('stop iteration %s', e)
-                self.check_reload_stale_file()
+                assert not self.stale()
                 break
-        logger.debug('loaded new data %s', data)
+        if data:
+            logger.debug('loaded new data %s', data)
+        else:
+            logger.debug('no new data')
         return data
 
-    def check_reload_stale_file(self):
-        if self.data and abs(self.data[-1] - datetime.datetime.now()) > datetime.timedelta(minutes=5):
-            if self.file.name == self.get_data_path():
-                msg = 'Data appears to no longer be updating'
-                logger.error(msg)
-                raise BaseException(msg)
-            self.close()
-            self.file = PAPMonitor.get_latest_data()
+    def stale(self):
+        # TODO: use self.window_duration? 
+        staleness = abs(self.power_data[-1].timestamp - datetime.datetime.now()) 
+        logger.debug('staleness %s %s', self.file.name, staleness)
+        msg = 'Data appears to no longer be updating'
+        return staleness > datetime.timedelta(minutes=5)
 
     def monitor(self):
         data = self.load_data()
@@ -128,7 +148,7 @@ class PAPMonitor:
 
     def get_active_period(self, t=None):
         ''' Get last active period not ending before t '''
-        logger.debug('get active period t %s', t)
+        #logger.debug('get active period t %s', t)
         t = t or now_datetime()
         assert type(t) is datetime.datetime
         stop = datetime.datetime.combine(t.date(), self.stop)
@@ -137,7 +157,7 @@ class PAPMonitor:
         start = datetime.datetime.combine(stop.date(), self.start)
         if start > stop:
             start -= ONE_DAY
-        logger.debug('active period: start %s stop %s', start, stop)
+        #logger.debug('active period: start %s stop %s', start, stop)
         return start, stop
 
     def in_active_period(self, t=None):
@@ -178,7 +198,7 @@ class PAPMonitor:
     def worn_in_active_period(self):
         # TODO: speed up? 
         # start at end and work backwords until hit wake time? 
-        logger.debug('worn in active period')
+        logger.debug('worn_in_active_period')
         if not self.in_active_period():
             return False
         logger.debug('in active period')
@@ -197,7 +217,8 @@ class PAPMonitor:
         return average_power and average_power > self.cutoff_power
 
     def __str__(self):
-        return 'PAPMonitor[%s]' % self.power_data
+        n = self.file.name if self.file is not None else 'None'
+        return 'PAPMonitor[%s][%s]' % (self.power_data, self.file.name)
 
 def get_fake_file(should_trigger=True):
     n = 100

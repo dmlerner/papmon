@@ -27,7 +27,7 @@ class PowerDatum:
         #return self.timestamp < other.timestamp
 
     def __str__(self):
-        return 'PowerDatum[%s][%s]' % (self.timestamp.strftime('%H:%m:%S'), self.power)
+        return 'PowerDatum[%s][%s]' % (self.timestamp.strftime('%H:%M:%S'), self.power)
 
 class EnergyDatum(PowerDatum):
     def __init__(self, timestamp, power, energy):
@@ -47,7 +47,7 @@ class EnergyDatum(PowerDatum):
 
     def __str__(self):
         return 'EnergyDatum[%s][%s][%s]' % (
-                self.elapsed_time.strftime('%H:%m:%S'), 
+                self.timestamp.strftime('%H:%M:%S'), 
                 self.energy,
                 self.power)
 
@@ -107,6 +107,7 @@ class PowerData(SortedCollection):
         assert type(window_duration) is datetime.timedelta
         assert type(cutoff) in (float, int)
         power_by_start_time = self.get_power_by_start_time(start, stop, window_duration)
+        logger.debug('power_by_start_time %s %s', str(power_by_start_time)[:200], str(power_by_start_time)[-200:])
         return dict(filter(
             lambda kv: kv[1] > cutoff,
             power_by_start_time.items()))

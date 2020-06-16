@@ -39,8 +39,8 @@ def get_args(arg_str=None):
     args = argparser.parse_args(arg_str) 
     if args.test:
         # be armed always
-        args.start = datetime.datetime.now().strftime('%H:%m')
-        args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime('%H:%m')
+        args.start = datetime.datetime.now().strftime('%H:%M')
+        args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=2)).strftime('%H:%M')
         args.window = '5s'
         args.log = 'debug'
     return args
