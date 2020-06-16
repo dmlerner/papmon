@@ -33,6 +33,9 @@ def get_args(arg_str=None):
             default='120s',
             nargs='?',
             )
+    argparser.add_argument('--test',
+            action='store_true',
+            )
     return argparser.parse_args(arg_str) 
 
 def get_log_filename(args):

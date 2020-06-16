@@ -26,6 +26,9 @@ class PowerDatum:
     #def __lt__(self, other):
         #return self.timestamp < other.timestamp
 
+    def __str__(self):
+        return 'PowerDatum[%s][%s]' % (self.timestamp.strftime('%H:%m:%S'), self.power)
+
 class EnergyDatum(PowerDatum):
     def __init__(self, timestamp, power, energy):
         super().__init__(timestamp, power)
@@ -42,9 +45,15 @@ class EnergyDatum(PowerDatum):
                 average_power,
                 energy)
 
+    def __str__(self):
+        return 'EnergyDatum[%s][%s][%s]' % (
+                self.elapsed_time.strftime('%H:%m:%S'), 
+                self.energy,
+                self.power)
+
 class PowerData(SortedCollection):
     def __str__(self):
-        return 'PowerData[%s][%s][%s]'%(str(len(self)), str(list(self[:5])), str(list(self[5:])))
+        return 'PowerData[%s][%s][%s]'%(str(len(self)), str(list(map(str, self[:5]))), str(list(map(str, self[-5:]))))
     # TODO: saveable? 
 
     def __init__(self, *args, **kwargs):

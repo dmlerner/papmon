@@ -78,13 +78,16 @@ class PAPMonitor:
         return PAPMonitor(get_fake_file(should_trigger), start, stop)
 
     def close(self):
+        logger.debug('closing')
         if self.file:
             self.file.close()
             self.file = None
 
     def load_next_datum(self):
         line = next(self.file)
+        logger.debug('datum loaded for line: %s', line)
         datum = power.PowerDatum.parse_line(line)
+        logger.debug('datum parsed as: %s', datum)
         self.power_data.insert(datum)
         return datum
 
@@ -93,20 +96,24 @@ class PAPMonitor:
         while True:
             try:
                 data.insert(self.load_next_datum())
-            except StopIteration:
+            except StopIteration as e:
                 # TODO: get new latest file?  even when no error? 
+                logger.debug('stop iteration %s', e)
                 break
+        logger.debug('loaded new data %s', data)
         return data
 
     def monitor(self):
-        # Not currently using the new data directly
         data = self.load_data()
         # Checks old + new data, ie self.power_data
         self.check_and_handle_wearing()
 
     def poll_monitor(self, dt=1):
         while True:
-            self.monitor()
+            try:
+                self.monitor()
+            except BaseException as e:
+                logger.error('monitor error %s', e)
             time.sleep(dt)
 
     def alarm_on(self):
@@ -144,7 +151,7 @@ class PAPMonitor:
         #self.alarm_going_off = True
 
     def check_and_handle_wearing(self):
-        logger.debug('handle_wearing')
+        logger.debug('handle_wearing, papmonitor=%s', self)
         if self.alarm_going_off:
             return
         logger.debug('alarm not going off yet')
@@ -181,6 +188,9 @@ class PAPMonitor:
                 now_datetime() - self.window_duration,
                 now_datetime()) 
         return average_power and average_power > self.cutoff_power
+
+    def __str__(self):
+        return 'PAPMonitor[%s]' % self.power_data
 
 def get_fake_file(should_trigger=True):
     n = 100
