@@ -16,6 +16,7 @@ class PAPMonitor:
 
     def __init__(self, f, start, stop,
             window_duration = datetime.timedelta(minutes=10),
+            grace_period = datetime.timedelta(minutes=5),
             cutoff_power = 10,
             ):
         self.file = f
@@ -27,6 +28,8 @@ class PAPMonitor:
         self.alarm_going_off = False
         self.window_duration = window_duration
         self.cutoff_power = cutoff_power
+        self.time_taken_off = None
+        self.grace_period = grace_period
 
     @staticmethod
     def parse_time_str(s):
@@ -46,10 +49,11 @@ class PAPMonitor:
         return open(data_path, 'r') 
 
     @staticmethod
-    def build(start_str, stop_str, window_duration):
+    def build(start_str, stop_str, window_duration, grace):
         start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
-        window_duration = PAPMonitor.parse_window_duration(window_duration)
-        return PAPMonitor(None, start, stop, window_duration)
+        window_duration = PAPMonitor.parse_window_duration(window_duration) # TODO rename
+        grace = PAPMonitor.parse_window_duration(grace)
+        return PAPMonitor(None, start, stop, window_duration, grace)
 
     @staticmethod
     def parse_window_duration(d):
@@ -190,9 +194,18 @@ class PAPMonitor:
         if self.wearing_now():
             return
         logger.debug('not wearing now')
+        if not self.off_long():
+            return
+        logger.debug('off long enough')
         logger.info('triggering alarm')
         self.trigger_alarm()
-        logger.debug('triggered alarm')
+
+    def off_long(self):
+        logger.debug('time_taken_off %s', self.time_taken_off)
+        if not self.time_taken_off:
+            return False
+        logger.debug('elapsed: %s', abs(self.time_taken_off - now_datetime()))
+        return abs(self.time_taken_off - now_datetime()) > self.grace_period
 
 
     def worn_in_active_period(self):
@@ -214,7 +227,12 @@ class PAPMonitor:
         average_power = self.power_data.average_power(
                 now_datetime() - self.window_duration,
                 now_datetime()) 
-        return average_power and average_power > self.cutoff_power
+        wearing = average_power and average_power > self.cutoff_power
+        if wearing:
+            self.time_taken_off = None
+        elif self.time_taken_off is None:
+            self.time_taken_off = now_datetime()
+        return wearing
 
     def __str__(self):
         n = self.file.name if self.file is not None else 'None'

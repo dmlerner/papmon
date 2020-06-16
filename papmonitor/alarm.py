@@ -14,7 +14,8 @@ def play_audio_alarm():
     logger.debug('play_audio_alarm')
     # TODO: logic to kill it, and move logic like this to papmonitor
     global last_play
-    if last_play and (datetime.datetime.now() - last_play) < datetime.timedelta(minutes=5):
+    if last_play and (datetime.datetime.now() - last_play) < datetime.timedelta(seconds=10):
+    #if last_play and (datetime.datetime.now() - last_play) < datetime.timedelta(minutes=5):
         logger.debug('played recently, returning')
         return
     last_play = datetime.datetime.now()

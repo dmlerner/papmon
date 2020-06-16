@@ -33,6 +33,10 @@ def get_args(arg_str=None):
             default='120s',
             nargs='?',
             )
+    argparser.add_argument('--grace',
+            default='5m',
+            nargs='?',
+            )
     argparser.add_argument('--test',
             action='store_true',
             )
@@ -42,6 +46,7 @@ def get_args(arg_str=None):
         args.start = datetime.datetime.now().strftime('%H:%M')
         args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=2)).strftime('%H:%M')
         args.window = '5s'
+        args.grace = '10s'
         args.log = 'debug'
     return args
 
@@ -68,7 +73,7 @@ def main(arg_str=None):
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window)) as pm:
+    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace)) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':
