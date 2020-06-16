@@ -84,7 +84,8 @@ class PowerData(SortedCollection):
         # TODO: cache and invalidate on insert? 
         try:
             self.check_bounds(start, stop)
-        except ValueError:
+        except ValueError as e:
+            logger.error('get energy bound error %s', e)
             return PowerData()
         start_index = self.find_ge_index(start) 
         logger.debug('start_index %s', start_index)
@@ -121,10 +122,12 @@ class PowerData(SortedCollection):
                 break
             duration = utils.get_elapsed_time(start_e, stop_e)
             if duration.total_seconds() == 0:
-                logger.debug('duration 0, is? %s', start_e is stop_e)
-                continue
-            energy = stop_e.energy - start_e.energy
-            average_power = energy/duration.total_seconds()
-            power_by_start_time[start_e.timestamp] = average_power
+                if start_e is not stop_e:
+                    logger.debug('two same time data, weird! %s %s', start_e, stop_e)
+                power_by_start_time[start_e.timestamp] = start_e.power
+            else:
+                energy = stop_e.energy - start_e.energy
+                average_power = energy/duration.total_seconds()
+                power_by_start_time[start_e.timestamp] = average_power
         #logger.debug('power_by_start_time %s', power_by_start_time)
         return power_by_start_time

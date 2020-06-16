@@ -1,3 +1,4 @@
+#!/usr/bin/sh
 recent(){
        	echo $1/$(ls $1 | tail -n 1) 
 }
@@ -39,4 +40,7 @@ case $1 in
 		tailRecentLog;;
 	vl)
 		vimRecentLog;;
+	*)
+		echo "invalid selection: $1\ntp|vp|tl|vl"
+		exit 1
 esac

@@ -13,7 +13,6 @@ from . import alarm
 from .utils.utils import *
 
 class PAPMonitor:
-    #window_duration = datetime.timedelta(minutes=10)
 
     def __init__(self, f, start, stop,
             window_duration = datetime.timedelta(minutes=10),
@@ -31,20 +30,17 @@ class PAPMonitor:
     def parse_time_str(s):
         return datetime.time(*map(int, s.split(':')))
 
-
     @staticmethod
-    def open_or_create(path):
-        #if not os.path.exists(os.path.getfolder(data_path)):
-        # os.path.makefolder()
-        # TODO
-        if type(path) is str:
-            return open(path, 'r')
-        return path # TODO rename
+    def get_latest_data_path():
+        package_folder = str(pathlib.Path(__file__).parent.absolute())
+        # glob comes out sorted, so this is last alphabetically, ie most recent
+        data_path = glob.glob(str(package_folder) + '/../data/power/*')[-1]
+        return data_path
 
     @staticmethod
     def get_latest_data():
-        package_folder = str(pathlib.Path(__file__).parent.absolute())
-        data_path = glob.glob(str(package_folder) + '/../data/power/*')[-1]
+        data_path = PAPMonitor.get_latest_data_path()
+        logger.debug('data_path %s', data_path)
         return open(data_path, 'r') 
 
     @staticmethod
@@ -80,6 +76,7 @@ class PAPMonitor:
     def close(self):
         logger.debug('closing')
         if self.file:
+            logger.debug('closing %s', self.file)
             self.file.close()
             self.file = None
 
@@ -97,11 +94,20 @@ class PAPMonitor:
             try:
                 data.insert(self.load_next_datum())
             except StopIteration as e:
-                # TODO: get new latest file?  even when no error? 
                 logger.debug('stop iteration %s', e)
+                self.check_reload_stale_file()
                 break
         logger.debug('loaded new data %s', data)
         return data
+
+    def check_reload_stale_file(self):
+        if self.data and abs(self.data[-1] - datetime.datetime.now()) > datetime.timedelta(minutes=5):
+            if self.file.name == self.get_data_path():
+                msg = 'Data appears to no longer be updating'
+                logger.error(msg)
+                raise BaseException(msg)
+            self.close()
+            self.file = PAPMonitor.get_latest_data()
 
     def monitor(self):
         data = self.load_data()
@@ -164,6 +170,7 @@ class PAPMonitor:
         if self.wearing_now():
             return
         logger.debug('not wearing now')
+        logger.info('triggering alarm')
         self.trigger_alarm()
         logger.debug('triggered alarm')
 

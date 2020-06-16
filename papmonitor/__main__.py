@@ -36,7 +36,14 @@ def get_args(arg_str=None):
     argparser.add_argument('--test',
             action='store_true',
             )
-    return argparser.parse_args(arg_str) 
+    args = argparser.parse_args(arg_str) 
+    if args.test:
+        # be armed always
+        args.start = datetime.datetime.now().strftime('%H:%m')
+        args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=1)).strftime('%H:%m')
+        args.window = '5s'
+        args.log = 'debug'
+    return args
 
 def get_log_filename(args):
     if args.logfile == 'stdout':

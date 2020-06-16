@@ -9,3 +9,4 @@ cpap-watt*
 __pycache__
 papmonitor/logs
 *.swo
+*egg-info*

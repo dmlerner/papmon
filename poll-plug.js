@@ -6,7 +6,7 @@ const filename = (new Date()).toISOString();
 
 function write(x) {
 	var timestamp = (new Date()).getTime() / 1000; // seconds since epoch
-	var path = 'data/power/' + filename;
+	var path = '/mnt/c/Users/david/google-drive/coding/papmonitor/data/power/' + filename;
 	fs.appendFile(
 		path, 
 		timestamp + ' ' + x + '\n',
