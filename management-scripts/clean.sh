@@ -1,2 +1,4 @@
 #!/usr/bin/sh
-rm -f ../data/power/* ../papmonitor/logs/*
+here=$(dirname $(realpath $0))
+root=$(dirname $here)
+rm -f $root/data/power/* $root/papmonitor/logs/*

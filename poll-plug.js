@@ -11,7 +11,10 @@ function write(x) {
 		path, 
 		timestamp + ' ' + x + '\n',
 		(err) => {
-			if (err) throw err;
+			//if (err) throw err;
+			if (err) {
+				console.log(err);
+			}
 		});
 }
 
@@ -19,7 +22,7 @@ function pollWriteWattage(device) {
 	if (!device) {
 		return;
 	}
-	var poll = device.startPolling(100); // ms 
+	var poll = device.startPolling(1000); // ms 
 	poll.on('emeter-realtime-update', (update) => {
 		write(update.power_mw / 1000); // write wattage
 	});

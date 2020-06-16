@@ -44,23 +44,23 @@ class EnergyDatum(PowerDatum):
 
 class PowerData(SortedCollection):
     def __str__(self):
-        return 'PowerData ' + str(list(self[:5])) + '...' + str(len(self))
+        return 'PowerData[%s][%s][%s]'%(str(len(self)), str(list(self[:5])), str(list(self[5:])))
     # TODO: saveable? 
+
     def __init__(self, *args, **kwargs):
         kwargs['key'] = kwargs.get('key') or (lambda pd: pd.timestamp) # TODO copy
         super().__init__(*args, **kwargs)
 
     def average_power(self, start, stop):
+        logger.debug('start %s', start)
+        logger.debug('stop %s', stop)
         sums = self.get_energy_prefix_sums(start, stop)
         # TODO: obob with energy? 
         if not sums:
             return
         if len(sums) == 1:
             return sums[0].power
-        return sums[-1].energy / get_elapsed_time(sums[0], sums[-1]).total_seconds()
-
-    def get_energy(self, start, stop):
-        prefixes = self.get_energy_prefix_sums(start, stop)[-1].energy
+        return sums[-1].energy / utils.get_elapsed_time(sums[0], sums[-1]).total_seconds()
 
     def check_bounds(self, start, stop):
         logger.debug('check_bounds %s %s %s', self, start, stop)
@@ -117,5 +117,5 @@ class PowerData(SortedCollection):
             energy = stop_e.energy - start_e.energy
             average_power = energy/duration.total_seconds()
             power_by_start_time[start_e.timestamp] = average_power
-        logger.debug('power_by_start_time %s', power_by_start_time)
+        #logger.debug('power_by_start_time %s', power_by_start_time)
         return power_by_start_time

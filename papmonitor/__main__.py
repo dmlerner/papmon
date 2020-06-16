@@ -9,26 +9,28 @@ from .papmonitor import PAPMonitor
 
 def get_args(arg_str=None):
     argparser = argparse.ArgumentParser()
-    argparser.add_argument('log',
+    argparser.add_argument('--log',
             help='debug|info|warning|error|critical',
             default='debug',
             nargs='?',
             )
-    argparser.add_argument('logfile',
+    argparser.add_argument('--logfile',
             help='stdout|timestamp',
             default='timestamp',
             nargs='?',
             )
-    argparser.add_argument('start',
+    argparser.add_argument('--start',
             help='hours:minutes in military',
-            #default='23:00',
-            default='00:01',
+            default='23:00',
             nargs='?',
             )
-    argparser.add_argument('stop',
+    argparser.add_argument('--stop',
             help='hours:minutes in military',
-            #default='6:00',
-            default='16:00',
+            default='6:00',
+            nargs='?',
+            )
+    argparser.add_argument('--window',
+            default='120s',
             nargs='?',
             )
     return argparser.parse_args(arg_str) 
@@ -56,7 +58,7 @@ def main(arg_str=None):
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build(args.start, args.stop)) as pm:
+    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window)) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':
