@@ -26,7 +26,7 @@ def get_args(arg_str=None):
             )
     argparser.add_argument('--stop',
             help='hours:minutes in military',
-            default='6:00',
+            default='7:00',
             nargs='?',
             )
     argparser.add_argument('--window',
@@ -34,14 +34,14 @@ def get_args(arg_str=None):
             nargs='?',
             )
     argparser.add_argument('--grace',
-            default='5m',
+            default='8m',
             nargs='?',
             )
     argparser.add_argument('--test',
             action='store_true',
             )
     args = argparser.parse_args(arg_str) 
-    if args.test:
+    if args.test == True:
         # be armed always
         args.start = datetime.datetime.now().strftime('%H:%M')
         args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=2)).strftime('%H:%M')
