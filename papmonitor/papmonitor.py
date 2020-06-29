@@ -17,6 +17,7 @@ class PAPMonitor:
     def __init__(self, f, start, stop,
             window_duration = datetime.timedelta(minutes=10),
             grace_period = datetime.timedelta(minutes=5),
+            speaker = None,
             cutoff_power = 10,
             ):
         self.file = f
@@ -29,6 +30,7 @@ class PAPMonitor:
         self.window_duration = window_duration
         self.cutoff_power = cutoff_power
         self.time_taken_off = None
+        self.speaker = speaker
         self.grace_period = grace_period
 
     @staticmethod
@@ -49,11 +51,11 @@ class PAPMonitor:
         return open(data_path, 'r') 
 
     @staticmethod
-    def build(start_str, stop_str, window_duration, grace):
+    def build(start_str, stop_str, window_duration, grace, speaker):
         start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
         window_duration = PAPMonitor.parse_window_duration(window_duration) # TODO rename
         grace = PAPMonitor.parse_window_duration(grace)
-        return PAPMonitor(None, start, stop, window_duration, grace)
+        return PAPMonitor(None, start, stop, window_duration, grace, speaker)
 
     @staticmethod
     def parse_window_duration(d):

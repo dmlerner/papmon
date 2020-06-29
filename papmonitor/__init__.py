@@ -1,4 +1,4 @@
-from . import alarm
+from .alarm import alarm
 from . import power
 from . import papmonitor
 from .utils import utils

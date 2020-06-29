@@ -40,6 +40,10 @@ def get_args(arg_str=None):
     argparser.add_argument('--test',
             action='store_true',
             )
+    argparser.add_argument('--speaker',
+            default='bedroom speaker',
+            nargs='?'
+            )
     args = argparser.parse_args(arg_str) 
     if args.test == True:
         # be armed always
@@ -73,7 +77,7 @@ def main(arg_str=None):
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace)) as pm:
+    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.speaker)) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':
