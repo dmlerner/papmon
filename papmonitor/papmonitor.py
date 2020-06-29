@@ -9,7 +9,7 @@ import logging
 logger = logging.getLogger(__name__)
 
 from . import power
-from . import alarm
+from .alarm.alarm import Alarm
 from .utils.utils import *
 
 class PAPMonitor:
@@ -17,7 +17,7 @@ class PAPMonitor:
     def __init__(self, f, start, stop,
             window_duration = datetime.timedelta(minutes=10),
             grace_period = datetime.timedelta(minutes=5),
-            speaker = None,
+            alarm = None,
             cutoff_power = 10,
             ):
         self.file = f
@@ -26,15 +26,14 @@ class PAPMonitor:
                 ) # need timestamp for staleness check
         self.start = start
         self.stop = stop
-        self.alarm_going_off = False
         self.window_duration = window_duration
         self.cutoff_power = cutoff_power
         self.time_taken_off = None
-        self.speaker = speaker
+        self.alarm = alarm
         self.grace_period = grace_period
 
     @staticmethod
-    def parse_time_str(s):
+    def parse_time(s):
         return datetime.time(*map(int, s.split(':')))
 
     @staticmethod
@@ -51,14 +50,15 @@ class PAPMonitor:
         return open(data_path, 'r') 
 
     @staticmethod
-    def build(start_str, stop_str, window_duration, grace, speaker):
-        start, stop = map(PAPMonitor.parse_time_str, (start_str, stop_str))
-        window_duration = PAPMonitor.parse_window_duration(window_duration) # TODO rename
-        grace = PAPMonitor.parse_window_duration(grace)
-        return PAPMonitor(None, start, stop, window_duration, grace, speaker)
+    def build(start_str, stop_str, window_duration, grace, chromecast_name):
+        start, stop = map(PAPMonitor.parse_time, (start_str, stop_str))
+        window_duration = PAPMonitor.parse_duration(window_duration) 
+        grace = PAPMonitor.parse_duration(grace)
+        alarm = Alarm(chromecast_name)
+        return PAPMonitor(None, start, stop, window_duration, grace, alarm)
 
     @staticmethod
-    def parse_window_duration(d):
+    def parse_duration(d):
         if type(d) is datetime.timedelta:
             return d
         if type(d) is str:
@@ -76,16 +76,28 @@ class PAPMonitor:
         start = (now - datetime.timedelta(hours=2)).strftime('%H:%M')
         if should_trigger:
             stop = (now + datetime.timedelta(hours=1)).strftime('%H:%M')
+            alarm = Alarm('bedroom speaker')
         else:
             stop = (now - datetime.timedelta(hours=1)).strftime('%H:%M')
-        return PAPMonitor(get_fake_file(should_trigger), start, stop)
+            alarm = None
+
+        return PAPMonitor(get_fake_file(should_trigger), start, stop, alarm=alarm)
 
     def close(self):
         logger.debug('closing')
+        self.close_file()
+        self.close_alarm()
+
+    def close_file(self):
         if self.file:
             logger.debug('closing %s', self.file)
             self.file.close()
             self.file = None
+
+    def close_alarm(self):
+        if self.alarm:
+            self.alarm.close()
+            self.alarm = None
 
     def load_next_datum(self):
         if self.file is None:
@@ -101,13 +113,16 @@ class PAPMonitor:
     def should_reload(self):
         logger.debug('')
         if self.file is None:
+            logger.debug('should reload; file is None')
             return True
         if self.file.name != self.get_latest_data_path():
+            logger.debug('should reload; not using latest file')
             return True
+        logger.debug('should not reload')
 
     def reload(self):
         logger.info('')
-        self.close()
+        self.close_file()
         self.file = PAPMonitor.get_latest_data()
 
     def load_data(self):
@@ -145,12 +160,15 @@ class PAPMonitor:
             try:
                 self.monitor()
             except BaseException as e:
-                logger.error('monitor error %s', e)
+                import traceback
+                traceback.print_exc()
+                logger.error('monitor error: %s', e)
             time.sleep(dt)
 
     def alarm_on(self):
         ''' May check additional criteria, eg phone is at home '''
         return self.in_active_period()
+
 
     def get_active_period(self, t=None):
         ''' Get last active period not ending before t '''
@@ -177,30 +195,36 @@ class PAPMonitor:
         logger.debug('in active period returning: %s', start <= t <= stop)
         return start <= t <= stop
 
-    def trigger_alarm(self):
-        assert not self.alarm_going_off
-        alarm.play_audio_alarm()
-        #self.alarm_going_off = True
-
     def check_and_handle_wearing(self):
         logger.debug('handle_wearing, papmonitor=%s', self)
-        if self.alarm_going_off:
+
+        logger.debug('check if: alarm already going off')
+        if self.alarm.is_going_off():
             return
-        logger.debug('alarm not going off yet')
+        logger.debug('alarm not already going off')
+
+        logger.debug('check if: alarm is armed')
         if not self.alarm_on():
             return
         logger.debug('alarm is armed')
+
+        logger.debug('check if: has been worn in active period')
         if not self.worn_in_active_period():
             return
         logger.debug('has been worn in active period')
+
+        logger.debug('check if: wearing now')
         if self.wearing_now():
             return
         logger.debug('not wearing now')
+
+        logger.debug('check if: off long enough')
         if not self.off_long():
             return
         logger.debug('off long enough')
+
         logger.info('triggering alarm')
-        self.trigger_alarm()
+        self.alarm.play()
 
     def off_long(self):
         logger.debug('time_taken_off %s', self.time_taken_off)
@@ -238,7 +262,7 @@ class PAPMonitor:
 
     def __str__(self):
         n = self.file.name if self.file is not None else 'None'
-        return 'PAPMonitor[%s][%s]' % (self.power_data, self.file.name)
+        return 'PAPMonitor[%s][%s][%s]' % (self.power_data, self.file.name, self.alarm)
 
 def get_fake_file(should_trigger=True):
     n = 100

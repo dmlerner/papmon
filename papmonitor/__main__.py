@@ -40,7 +40,7 @@ def get_args(arg_str=None):
     argparser.add_argument('--test',
             action='store_true',
             )
-    argparser.add_argument('--speaker',
+    argparser.add_argument('--chromecast_name',
             default='bedroom speaker',
             nargs='?'
             )
@@ -72,12 +72,13 @@ def init_logging(args):
             )
 
 def main(arg_str=None):
+    global pm
     args = get_args(arg_str)
     init_logging(args)
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.speaker)) as pm:
+    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name)) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':
