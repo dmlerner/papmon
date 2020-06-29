@@ -50,11 +50,11 @@ class PAPMonitor:
         return open(data_path, 'r') 
 
     @staticmethod
-    def build(start_str, stop_str, window_duration, grace, chromecast_name):
+    def build(start_str, stop_str, window_duration, grace, chromecast_name, media_path):
         start, stop = map(PAPMonitor.parse_time, (start_str, stop_str))
         window_duration = PAPMonitor.parse_duration(window_duration) 
         grace = PAPMonitor.parse_duration(grace)
-        alarm = Alarm(chromecast_name)
+        alarm = Alarm(chromecast_name, media_path)
         return PAPMonitor(None, start, stop, window_duration, grace, alarm)
 
     @staticmethod
@@ -76,7 +76,8 @@ class PAPMonitor:
         start = (now - datetime.timedelta(hours=2)).strftime('%H:%M')
         if should_trigger:
             stop = (now + datetime.timedelta(hours=1)).strftime('%H:%M')
-            alarm = Alarm('bedroom speaker')
+            filename = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
+            alarm = Alarm('bedroom speaker', filename)
         else:
             stop = (now - datetime.timedelta(hours=1)).strftime('%H:%M')
             alarm = None

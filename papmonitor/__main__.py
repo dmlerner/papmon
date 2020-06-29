@@ -42,7 +42,10 @@ def get_args(arg_str=None):
             )
     argparser.add_argument('--chromecast_name',
             default='bedroom speaker',
-            nargs='?'
+            nargs='?',
+            )
+    argparser.add_argument('--media_path',
+            nargs='?',
             )
     args = argparser.parse_args(arg_str) 
     if args.test == True:
@@ -52,6 +55,7 @@ def get_args(arg_str=None):
         args.window = '5s'
         args.grace = '10s'
         args.log = 'debug'
+        args.media_path = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
     return args
 
 def get_log_filename(args):
@@ -78,7 +82,7 @@ def main(arg_str=None):
     logger = logging.getLogger(__name__)
     logger.debug('main')
     logger.debug(args)
-    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name)) as pm:
+    with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name, args.media_path)) as pm:
         pm.poll_monitor()
 
 if __name__ == '__main__':

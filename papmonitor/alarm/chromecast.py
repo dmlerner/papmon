@@ -85,7 +85,8 @@ def main():
         mc = cc.media_controller
         #c = ChromeCast('Gym')
         print('play')
-        c.play('audio.mp3')
+        filename = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
+        c.play(filename)
         print('pause')
         c.pause()
         time.sleep(2)

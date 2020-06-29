@@ -13,7 +13,9 @@ class Alarm(chromecast.ChromeCast):
 
     def play(self, media_path=None):
         logger.info('media_path %s', media_path)
-        super().play(media_path or self.media_path)
+        path = media_path or self.media_path
+        assert path
+        super().play(path)
 
     def is_going_off(self):
         return self._chromecast.media_controller.is_playing
