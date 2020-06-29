@@ -196,36 +196,47 @@ class PAPMonitor:
         logger.debug('in active period returning: %s', start <= t <= stop)
         return start <= t <= stop
 
-    def check_and_handle_wearing(self):
-        logger.debug('handle_wearing, papmonitor=%s', self)
-
-        logger.debug('check if: alarm already going off')
-        if self.alarm.is_going_off():
-            return
-        logger.debug('alarm not already going off')
-
+    def should_alarm_be_going_off(self):
+        logger.info('')
         logger.debug('check if: alarm is armed')
         if not self.alarm_on():
-            return
+            return False
         logger.debug('alarm is armed')
 
         logger.debug('check if: has been worn in active period')
         if not self.worn_in_active_period():
-            return
+            return False
         logger.debug('has been worn in active period')
 
         logger.debug('check if: wearing now')
         if self.wearing_now():
-            return
+            return False
         logger.debug('not wearing now')
 
         logger.debug('check if: off long enough')
         if not self.off_long():
-            return
+            return False
         logger.debug('off long enough')
 
-        logger.info('triggering alarm')
-        self.alarm.play()
+        logger.info('alarm should be going off')
+        return True
+
+
+    def check_and_handle_wearing(self):
+        logger.debug('handle_wearing, papmonitor=%s', self)
+        should = self.should_alarm_be_going_off()
+        logger.debug('should %s', should)
+
+        if self.alarm.is_going_off():
+            logger.debug('alarm is going off')
+            if not should:
+                logger.info('stopping alarm')
+                self.alarm.stop()
+        else:
+            logger.debug('alarm is not going off')
+            if should:
+                logger.info('playing alarm')
+                self.alarm.play()
 
     def off_long(self):
         logger.debug('time_taken_off %s', self.time_taken_off)

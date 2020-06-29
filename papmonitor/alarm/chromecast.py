@@ -7,16 +7,32 @@ import logging
 logger = logging.getLogger(__name__)
 
 class ChromeCast:
+
+    @staticmethod
+    def or_reset(f):
+        def _f(*args, **kwargs):
+            try:
+                return f(*args, **kwargs)
+            except:
+                self._chromecast = None
+        return _f
+
     def __init__(self, name):
-        self._chromecast = ChromeCast.get(name)
+        self.name = name
+        self._chromecast = Chromecast.get_by_name(name)
         self.ip = self._chromecast.host
         self.pause = self._chromecast.media_controller.pause
         self.set_volume_muted = self._chromecast.set_volume_muted
         self.set_volume = self._chromecast.set_volume
         self.status = self._chromecast.status
 
+    def get_chromecast(self):
+        if self._chromecast is None:
+            self._chromecast = ChromeCast.get_by_name(self.chromecast_name)
+        return self._chromecast
+
     @staticmethod
-    def get(name):
+    def get_by_name(name):
         chromecasts = pychromecast.get_chromecasts()
         logger.debug('found chromecasts: %s',
                 [c.device.friendly_name for c in chromecasts])
@@ -44,6 +60,7 @@ class ChromeCast:
         flags = self.get_play_flags()
         return f'{player_path} {" ".join(flags)} {media_path} &'
 
+    @or_reset
     def play(self, media_path):
         logger.info('play %s', media_path)
         command = self.get_play_command(media_path)
@@ -64,14 +81,17 @@ class ChromeCast:
         logger.debug('unmuting')
         self.set_volume_muted(False)
     
+    @or_reset
     def stop(self):
         logger.info('')
         self._chromecast.media_controller.stop()
 
+    @or_reset
     def unpause(self):
         logger.info('')
         self._chromecast.media_controller.play()
 
+    @or_reset
     def close(self):
         logger.info('')
         self.stop()
