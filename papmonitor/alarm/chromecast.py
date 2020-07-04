@@ -1,10 +1,12 @@
 import time
 import os
 import pdb
+import threading
+
 
 import pychromecast 
 import contextlib
-from . import wslprocess
+from ..utils import wslprocess
 
 import logging
 logger = logging.getLogger('papmonitor')
@@ -41,8 +43,14 @@ class ChromeCast:
     def status(self):
         return self.get_chromecast().status
 
+    def canceled(self):
+        # can't call get_chromecast; recursion
+        if self._chromecast.media_controller.status.idle_reason == 'CANCELLED':
+            # unclear why I need this...
+            self._chromecast = None
+
     def get_chromecast(self):
-        if self._chromecast is None:
+        if self._chromecast is None or self.canceled():
             self._chromecast = ChromeCast.get_by_name(self.name)
         assert self._chromecast
         self._chromecast.wait() 
@@ -106,6 +114,7 @@ class ChromeCast:
         self.unmute()
 
     def wait_for_playing(self, timeout=10, sleep=.5):
+        # TODO: threading
         logger.debug('')
         for i in range(int(timeout/sleep)):
             if self.is_playing():
@@ -120,40 +129,51 @@ class ChromeCast:
     
     def stop(self):
         logger.debug('')
-        self._chromecast.media_controller.stop()
-        wslprocess.kill_pids([self.vlc_pid])
+        self.get_chromecast().media_controller.stop()
+        #wslprocess.kill_pids([self.vlc_pid])
+        wslprocess.kill('vlc') # TODO: this is heavy handed, but shit's getting orphaned ...
 
     def unpause(self):
         logger.debug('')
-        self._chromecast.media_controller.play()
+        self.get_chromecast().media_controller.play()
 
     def close(self):
         logger.debug('')
         self.stop()
-        self._chromecast.disconnect()
+        self.get_chromecast().disconnect()
 
     def is_open(self):
         logger.debug('')
         return self.vlc_pid in wslprocess.get_pids('vlc')
 
+    def media_status(self):
+        return self.get_chromecast().media_controller.status
+
     def is_playing(self):
         logger.debug('media_controller status %s', self.get_chromecast().media_controller.status)
-        return self.get_chromecast().media_controller.status.player_state == 'PLAYING'
+        return self.media_status().player_state == 'PLAYING'
 
     def is_paused(self):
         logger.debug('media_controller status %s', self.get_chromecast().media_controller.status)
-        return self.get_chromecast().media_controller.status.player_state == 'PAUSED'
+        return self.media_status().player_state == 'PAUSED'
 
-    def smooth_set_volume(self, target, start=None, steps=10, step_time=1):
+    def smooth_set_volume(self, start=None, target=None, steps=10, step_time=1):
         if start is None:
             start = self.get_volume()
+        if target is None:
+            target = 1
+        self.set_volume(target)
+        # warning: blocking!
+        #return # TODO: needs caller to have threading or something...
         dv = (target - start) / steps
         for i in range(steps):
-            self.set_volume(start + i*dv)
+            v = start + i*dv
+            logger.debug('smooth set, step %s, volume %s', i, v)
+            self.set_volume(v)
             time.sleep(step_time)
 
     def get_volume(self):
-        return self.get_chromecast().media_controller.status.volume_level
+        return self.media_status().volume_level
 
 
 def main():
@@ -175,7 +195,7 @@ def main():
 
     c.set_volume(0)
     c.play(filename)
-    c.smooth_set_volume(1, 0)
+    c.smooth_set_volume(0, 1)
     return
     logger.debug('pause')
     c.pause()

@@ -244,7 +244,7 @@ class PAPMonitor:
             logger.debug('alarm is not going off')
             if should:
                 logger.info('playing alarm')
-                self.alarm.play()
+                self.alarm.play() # TODO: thread for smooth set?
 
     def off_long(self):
         logger.debug('time_taken_off %s', self.time_taken_off)

@@ -47,6 +47,9 @@ def get_args(arg_str=None):
     argparser.add_argument('--media_path',
             nargs='?',
             )
+    argparser.add_argument('--kill',
+            action='store_true',
+            )
     args = argparser.parse_args(arg_str) 
     if args.test == True:
         # be armed always
@@ -84,6 +87,13 @@ def main(arg_str=None):
         handler.addFilter(logging.Filter('papmonitor'))
     logger.debug('main')
     logger.debug(args)
+    if args.kill:
+        logger.debug('killing')
+        import pdb
+        #pdb.set_trace()
+        from .utils import kill
+        kill.main()
+        return
     with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name, args.media_path)) as pm:
         pm.poll_monitor()
 
