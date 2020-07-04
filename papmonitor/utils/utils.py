@@ -1,7 +1,7 @@
 import datetime
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('papmonitor')
 
 # TODO: mkdir utils with time.py? 
 def get_time(t):

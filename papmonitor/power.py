@@ -2,7 +2,7 @@ from dataclasses import dataclass
 import datetime
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('papmonitor')
 
 from .sortedcollection import SortedCollection
 from .utils import utils

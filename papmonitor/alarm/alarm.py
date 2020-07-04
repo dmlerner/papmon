@@ -4,7 +4,7 @@ from . import chromecast
 import datetime
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('papmonitor')
 
 class Alarm(chromecast.ChromeCast):
     def __init__(self, name, media_path=None):

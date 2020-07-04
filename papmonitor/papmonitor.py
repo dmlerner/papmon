@@ -6,7 +6,7 @@ import datetime
 import contextlib
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('papmonitor')
 
 from . import power
 from .alarm.alarm import Alarm

@@ -4,10 +4,10 @@ import pdb
 
 import pychromecast 
 import contextlib
-import wslprocess
+from . import wslprocess
 
 import logging
-logger = logging.getLogger(__name__)
+logger = logging.getLogger('papmonitor')
 '''
 class Filter(logging.Filter):
     def filter(self, record):

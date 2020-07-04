@@ -79,7 +79,9 @@ def main(arg_str=None):
     global pm
     args = get_args(arg_str)
     init_logging(args)
-    logger = logging.getLogger(__name__)
+    logger = logging.getLogger('papmonitor')
+    for handler in logging.root.handlers:
+        handler.addFilter(logging.Filter('papmonitor'))
     logger.debug('main')
     logger.debug(args)
     with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name, args.media_path)) as pm:
