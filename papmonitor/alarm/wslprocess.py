@@ -4,8 +4,12 @@ import argparse
  
 def kill_pids(pids):
     for pid in pids:
-        cmd = f"/mnt/c/Windows/System32/taskkill.exe '/PID' {pid}" 
-        status, output = subprocess.getstatusoutput(cmd)
+        cmd = f"/mnt/c/Windows/System32/taskkill.exe '/PID' {pid} /F" 
+        print(cmd)
+        if pid is not None:
+            status, output = subprocess.getstatusoutput(cmd)
+            print(status)
+            print(output)
 
 def kill(pattern):
     pids = get_pids(pattern)

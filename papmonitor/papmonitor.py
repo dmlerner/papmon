@@ -146,6 +146,8 @@ class PAPMonitor:
 
     def stale(self):
         # TODO: use self.window_duration? 
+        if not self.power_data:
+            return False
         staleness = abs(self.power_data[-1].timestamp - datetime.datetime.now()) 
         logger.debug('staleness %s %s', self.file.name, staleness)
         msg = 'Data appears to no longer be updating'
