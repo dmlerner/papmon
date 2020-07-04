@@ -52,8 +52,8 @@ def get_args(arg_str=None):
         # be armed always
         args.start = datetime.datetime.now().strftime('%H:%M')
         args.stop = (datetime.datetime.now() - datetime.timedelta(minutes=2)).strftime('%H:%M')
-        args.window = '5s'
-        args.grace = '10s'
+        args.window = '10s'
+        args.grace = '2s'
         args.log = 'debug'
         args.media_path = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
     return args

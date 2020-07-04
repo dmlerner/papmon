@@ -72,6 +72,7 @@ class PAPMonitor:
 
     @staticmethod
     def build_fake(should_trigger):
+        logger.debug('should_trigger %s', should_trigger)
         now = datetime.datetime.now()
         start = (now - datetime.timedelta(hours=2)).strftime('%H:%M')
         if should_trigger:
@@ -202,23 +203,27 @@ class PAPMonitor:
         logger.info('')
         logger.debug('check if: alarm is armed')
         if not self.alarm_on():
+            logger.debug('check abort: alarm is not armed')
             return False
-        logger.debug('alarm is armed')
+        logger.debug('check continue: alarm is armed')
 
         logger.debug('check if: has been worn in active period')
         if not self.worn_in_active_period():
+            logger.debug('check abort: has not been worn in active period')
             return False
-        logger.debug('has been worn in active period')
+        logger.debug('check continue: has been worn in active period')
 
         logger.debug('check if: wearing now')
         if self.wearing_now():
+            logger.debug('check abort: wearing now')
             return False
-        logger.debug('not wearing now')
+        logger.debug('check continue: not wearing now')
 
         logger.debug('check if: off long enough')
         if not self.off_long():
+            logger.debug('check abort: not off long enough')
             return False
-        logger.debug('off long enough')
+        logger.debug('check continue: off long enough')
 
         logger.info('alarm should be going off')
         return True
@@ -229,6 +234,7 @@ class PAPMonitor:
         should = self.should_alarm_be_going_off()
         logger.debug('should %s', should)
 
+        logger.debug('check if: alarm is going off')
         if self.alarm.is_going_off():
             logger.debug('alarm is going off')
             if not should:
@@ -283,8 +289,10 @@ def get_fake_file(should_trigger=True):
     times = [str(time.time() - 3600*5*random.random()) for i in range(n)]
     powers = [random.random() * 12 for i in range(n)] 
     if should_trigger:
-        times += [str(time.time() + 1000)]
-        powers += [-200000]
+        times += [str(time.time() + 1)] # strong on
+        powers += [2000000000000]
+        times += [str(time.time() + 2)] # strongly off
+        powers += [-2000000000000]
     data = [str(t) + ' ' + str(p) for (t, p) in zip(times, powers)]
     logger.debug('data %s %s', data[:5], data[-1])
     return data.__iter__()

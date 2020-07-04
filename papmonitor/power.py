@@ -72,7 +72,7 @@ class PowerData(SortedCollection):
         return sums[-1].energy / utils.get_elapsed_time(sums[0], sums[-1]).total_seconds()
 
     def check_bounds(self, start, stop):
-        logger.debug('check_bounds %s %s %s', self, start, stop)
+        logger.debug('check_bounds %s %s', start, stop)
         if not self:
             raise ValueError('empty power data')
         if start > self.max().timestamp:
@@ -97,31 +97,37 @@ class PowerData(SortedCollection):
     def get_energy_prefix_sums(self, start, stop):
         logger.debug('start, stop %s %s', start, stop)
         energies = self.get_energies(start, stop)
-        logger.debug('energies %s', energies)
+        #logger.debug('energies %s', energies)
         for i in range(1, len(energies)):
             energies[i].energy += energies[i-1].energy
         return energies
 
     def get_power_over_cutoff_by_start_time(self, start, stop, window_duration, cutoff):
+        logger.debug('')
         assert set(map(type, (start, stop))) == {datetime.datetime}
         assert type(window_duration) is datetime.timedelta
         assert type(cutoff) in (float, int)
+        assert start <= stop
+        logger.debug('assertions pass')
         power_by_start_time = self.get_power_by_start_time(start, stop, window_duration)
-        logger.debug('power_by_start_time %s %s', str(power_by_start_time)[:200], str(power_by_start_time)[-200:])
+        #logger.debug('power_by_start_time %s %s', str(power_by_start_time)[:200], str(power_by_start_time)[-200:])
+        logger.debug('power_by_start_time %s', str(power_by_start_time))
         return dict(filter(
             lambda kv: kv[1] > cutoff,
             power_by_start_time.items()))
 
     def get_power_by_start_time(self, start, stop, window_duration):
+        logger.debug('')
         prefix_sums = self.get_energy_prefix_sums(start, stop)
-        logger.debug('prefix_sums %s', prefix_sums)
+        #logger.debug('prefix_sums %s', prefix_sums)
         power_by_start_time = {}
         for start_e in prefix_sums:
             try:
-                stop_e = prefix_sums.find_le(start_e.timestamp + window_duration)
+                stop_e = prefix_sums.find_ge(start_e.timestamp + window_duration) # BUG: find ge? le could be less than window away...
             except ValueError:
                 break
             duration = utils.get_elapsed_time(start_e, stop_e)
+            assert duration >= window_duration
             if duration.total_seconds() == 0:
                 if start_e is not stop_e:
                     logger.debug('two same time data, weird! %s %s', start_e, stop_e)

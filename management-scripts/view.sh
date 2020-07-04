@@ -6,7 +6,7 @@ tailRecent(){
        	recent $1 | xargs tail -n 30
 }
 vimRecent(){
-	vim $(recent $1)
+	vim --clean $(recent $1)
 }
 
 power='/mnt/c/Users/david/google-drive/coding/papmonitor/data/power'

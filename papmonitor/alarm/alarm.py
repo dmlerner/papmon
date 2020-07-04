@@ -15,7 +15,13 @@ class Alarm(chromecast.ChromeCast):
         logger.info('media_path %s', media_path)
         path = media_path or self.media_path
         assert path
+        logger.debug('mute')
+        #self.set_volume(0)
+        logger.debug('play')
         super().play(path)
+        logger.debug('smooth')
+        self.smooth_set_volume(0, 1, 100, 1)
 
     def is_going_off(self):
+        logger.debug('volume: %s', self.get_volume())
         return self.is_playing()

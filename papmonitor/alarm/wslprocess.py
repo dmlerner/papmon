@@ -1,15 +1,20 @@
 import os
 import subprocess
 import argparse
+import logging
+
+logger = logging.getLogger('papmonitor')
  
 def kill_pids(pids):
+    logger.debug('pids %s', pids)
     for pid in pids:
         cmd = f"/mnt/c/Windows/System32/taskkill.exe '/PID' {pid} /F" 
-        print(cmd)
+        logger.debug(cmd)
         if pid is not None:
+            logger.debug('running cmd')
             status, output = subprocess.getstatusoutput(cmd)
-            print(status)
-            print(output)
+            logger.debug(status)
+            logger.debug(output)
 
 def kill(pattern):
     pids = get_pids(pattern)

@@ -8,16 +8,6 @@ from . import wslprocess
 
 import logging
 logger = logging.getLogger('papmonitor')
-'''
-class Filter(logging.Filter):
-    def filter(self, record):
-        return record.module == 'chromecast'
-
-#logger.addFilter(Filter())
-for handler in logging.root.handlers:
-       handler.addFilter(logging.Filter('chromecast'))
-       '''
-
 
 class ChromeCast:
 
@@ -72,7 +62,7 @@ class ChromeCast:
                 '--sout="#chromecast"',
                 '--demux-filter=demux_chromecast',
                 f'--sout-chromecast-ip={self.ip()}',
-                '>logs 2>&1', # TODO: handle logging
+                '>cc.log 2>&1', # TODO: handle logging
                 )
 
     def get_play_command(self, media_path):
@@ -105,9 +95,11 @@ class ChromeCast:
         self.mute()
         logger.debug(command)
         existing_vlcs = wslprocess.get_pids('vlc')
+        logger.debug('existing vlcs %s', existing_vlcs)
         os.system(command)
         #time.sleep(5)
         self.vlc_pid = (wslprocess.get_pids('vlc') - existing_vlcs).pop()
+        logger.debug('new vlc %s', self.vlc_pid)
         logger.debug('waiting')
         self.wait_for_playing()
         logger.debug('unmuting')
@@ -121,6 +113,9 @@ class ChromeCast:
                 return
             logger.debug('sleeping')
             time.sleep(sleep)
+        logger.debug('timed out waiting for play')
+        logger.debug(self.status())
+        logger.debug(self.get_chromecast().media_controller.status)
         assert False
     
     def stop(self):
@@ -138,23 +133,27 @@ class ChromeCast:
         self._chromecast.disconnect()
 
     def is_open(self):
+        logger.debug('')
         return self.vlc_pid in wslprocess.get_pids('vlc')
 
     def is_playing(self):
+        logger.debug('media_controller status %s', self.get_chromecast().media_controller.status)
         return self.get_chromecast().media_controller.status.player_state == 'PLAYING'
 
     def is_paused(self):
+        logger.debug('media_controller status %s', self.get_chromecast().media_controller.status)
         return self.get_chromecast().media_controller.status.player_state == 'PAUSED'
 
     def smooth_set_volume(self, target, start=None, steps=10, step_time=1):
         if start is None:
-            start = self.get_chromecast().media_controller.status.volume_level
+            start = self.get_volume()
         dv = (target - start) / steps
-        print(start, dv)
         for i in range(steps):
-            print(i, start + i*dv)
             self.set_volume(start + i*dv)
             time.sleep(step_time)
+
+    def get_volume(self):
+        return self.get_chromecast().media_controller.status.volume_level
 
 
 def main():
