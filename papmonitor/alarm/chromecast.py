@@ -1,18 +1,20 @@
 import time
 import os
+import pdb
+
 import pychromecast 
 import contextlib
 import wslprocess
 
 import logging
-print(__name__)
+logger = logging.getLogger(__name__)
 
 class ChromeCast:
 
     @staticmethod
     def get_by_name(name):
         chromecasts = pychromecast.get_chromecasts()
-        print('found chromecasts: %s',
+        logger.debug('found chromecasts: %s',
                 [c.device.friendly_name for c in chromecasts])
         return next(cc for cc in chromecasts if cc.device.friendly_name == name)
 
@@ -37,7 +39,7 @@ class ChromeCast:
         return self.get_chromecast().set_volume()
 
     def status(self):
-        return self.get_chromecast().status()
+        return self.get_chromecast().status
 
     def get_chromecast(self):
         if self._chromecast is None:
@@ -67,65 +69,92 @@ class ChromeCast:
         flags = self.get_play_flags()
         return f'{player_path} {" ".join(flags)} {media_path} &'
 
-    def play(self, media_path):
-        print('play %s', media_path)
+    def play(self, media_path=None):
+        logger.debug('play %s', media_path)
+        if media_path is None:
+            if self.is_playing():
+                logger.debug('already playing')
+                return 
+            if self.is_paused():
+                self.unpause()
+                return
+
+        assert media_path
+        self.stop()
         command = self.get_play_command(media_path)
+        #import pdb; pdb.set_trace()
 
         self._chromecast.wait() # TODO: needed? move to init?
-        # print(self._chromecast.status)
-        # print(self._chromecast.device)
+        # logger.debug(self._chromecast.status)
+        # logger.debug(self._chromecast.device)
         # mc = self._chromecast.media_controller
-        # print(mc.status)
+        # logger.debug(mc.status)
 
         # Needed to avoid connection noise
-        print('muting')
+        logger.debug('muting')
         self.mute()
         time.sleep(5)
-        print(command)
+        logger.debug(command)
         existing_vlcs = wslprocess.get_pids('vlc')
         os.system(command)
         time.sleep(5)
         self.vlc_pid = (wslprocess.get_pids('vlc') - existing_vlcs).pop()
-        print('unmuting')
+        logger.debug('unmuting')
         self.unmute()
     
     def stop(self):
-        print('')
+        logger.debug('')
         self._chromecast.media_controller.stop()
+        wslprocess.kill_pids([self.vlc_pid])
 
     def unpause(self):
-        print('')
+        logger.debug('')
         self._chromecast.media_controller.play()
 
     def close(self):
-        print('')
+        logger.debug('')
         self.stop()
         self._chromecast.disconnect()
-        wslprocess.kill_pids([self.vlc_pid])
 
     def is_open(self):
-        return self.vlc_pid in wslprocess.getpids('vlc')
+        return self.vlc_pid in wslprocess.get_pids('vlc')
+
+    def is_playing(self):
+        return self.get_chromecast().media_controller.status.player_state == 'PLAYING'
+
+    def is_paused(self):
+        return self.get_chromecast().media_controller.status.player_state == 'PAUSED'
 
 
 def main():
-    global c, cc, mc
-    with contextlib.closing(ChromeCast('bedroom speaker')) as c:
-        cc = c.get_chromecast()
-        mc = cc.media_controller
-        #c = ChromeCast('Gym')
-        print('play')
-        filename = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
-        #import pdb; pdb.set_trace()
+    logging.basicConfig(
+            filename=None, # stdout
+            level=logging.DEBUG,
+            format='%(relativeCreated)-7d|%(levelname)-7s|%(module)-10s|%(lineno)-4d|%(funcName)-35s|%(message)s'
+            )
 
-        c.play(filename)
-        print('pause')
-        c.pause()
-        time.sleep(2)
-        print('unpause')
-        c.unpause()
-        time.sleep(2)
-        print('stop')
-        c.stop()
+    global c, cc, mc, filename
+    #with contextlib.closing(ChromeCast('bedroom speaker')) as c:
+    c = ChromeCast('bedroom speaker')
+    cc = c.get_chromecast()
+    mc = cc.media_controller
+    #c = ChromeCast('Gym')
+    logger.debug('play')
+    filename = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
+    #import pdb; pdb.set_trace()
+
+    c.play(filename)
+    logger.debug('pause')
+    c.pause()
+    time.sleep(2)
+    logger.debug('unpause')
+    c.unpause()
+    time.sleep(2)
+    logger.debug('stop')
+    c.stop()
+    c.play(filename)
+    time.sleep(3)
+    c.play(filename)
 
 if __name__ == '__main__':
     main()

@@ -18,4 +18,4 @@ class Alarm(chromecast.ChromeCast):
         super().play(path)
 
     def is_going_off(self):
-        return self.is_open() self.is_playing()
+        return self.is_playing()
