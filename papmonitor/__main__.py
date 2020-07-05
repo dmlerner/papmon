@@ -46,6 +46,7 @@ def get_args(arg_str=None):
             )
     argparser.add_argument('--media_path',
             nargs='?',
+            default='file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
             )
     argparser.add_argument('--kill',
             action='store_true',

@@ -110,8 +110,8 @@ class PowerData(SortedCollection):
         assert start <= stop
         logger.debug('assertions pass')
         power_by_start_time = self.get_power_by_start_time(start, stop, window_duration)
-        #logger.debug('power_by_start_time %s %s', str(power_by_start_time)[:200], str(power_by_start_time)[-200:])
-        logger.debug('power_by_start_time %s', str(power_by_start_time))
+        logger.debug('power_by_start_time %s %s', str(power_by_start_time)[:200], str(power_by_start_time)[-200:])
+        #logger.debug('power_by_start_time %s', str(power_by_start_time))
         return dict(filter(
             lambda kv: kv[1] > cutoff,
             power_by_start_time.items()))
