@@ -4,7 +4,7 @@ import pdb
 import threading
 
 
-import pychromecast 
+import pychromecast
 import contextlib
 from ..utils import wslprocess
 
@@ -18,7 +18,9 @@ class ChromeCast:
         chromecasts = pychromecast.get_chromecasts()
         logger.debug('found chromecasts: %s',
                 [c.device.friendly_name for c in chromecasts])
-        return next(cc for cc in chromecasts if cc.device.friendly_name == name)
+        for c in chromecasts:
+            if c.device.friendly_name == name:
+                return c
 
     def __init__(self, name):
         self.name = name
@@ -52,8 +54,10 @@ class ChromeCast:
     def get_chromecast(self):
         if self._chromecast is None or self.canceled():
             self._chromecast = ChromeCast.get_by_name(self.name)
-        assert self._chromecast
-        self._chromecast.wait() 
+        try:
+            self._chromecast.wait()
+        except:
+            logger.debug('error waiting on chromecast %s', self._chromecast)
         return self._chromecast
 
     @staticmethod
@@ -64,7 +68,7 @@ class ChromeCast:
         return '/mnt/c/Program\ Files/VideoLAN/VLC/vlc.exe'
 
     def get_play_flags(self):
-        return ( 
+        return (
                 '-I dummy --dummy-quiet', # no gui
                 '--play-and-exit',
                 '--sout="#chromecast"',
@@ -83,7 +87,7 @@ class ChromeCast:
         if media_path is None:
             if self.is_playing():
                 logger.debug('already playing')
-                return 
+                return
             if self.is_paused():
                 self.unpause()
                 return
@@ -126,7 +130,7 @@ class ChromeCast:
         logger.debug(self.status())
         logger.debug(self.get_chromecast().media_controller.status)
         assert False
-    
+
     def stop(self):
         logger.debug('')
         self.get_chromecast().media_controller.stop()
@@ -185,7 +189,8 @@ def main():
 
     global c, cc, mc, filename
     #with contextlib.closing(ChromeCast('bedroom speaker')) as c:
-    c = ChromeCast('bedroom speaker')
+    #c = ChromeCast('bedroom speaker')
+    c = ChromeCast('Bike')
     cc = c.get_chromecast()
     mc = cc.media_controller
     #c = ChromeCast('Gym')

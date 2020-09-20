@@ -41,7 +41,8 @@ def get_args(arg_str=None):
             action='store_true',
             )
     argparser.add_argument('--chromecast_name',
-            default='bedroom speaker',
+            #default='bedroom speaker',
+            default='Bike',
             nargs='?',
             )
     argparser.add_argument('--media_path',
@@ -51,7 +52,7 @@ def get_args(arg_str=None):
     argparser.add_argument('--kill',
             action='store_true',
             )
-    args = argparser.parse_args(arg_str) 
+    args = argparser.parse_args(arg_str)
     if args.test == True:
         # be armed always
         args.start = datetime.datetime.now().strftime('%H:%M')
@@ -93,7 +94,7 @@ def main(arg_str=None):
         import pdb
         #pdb.set_trace()
         from .utils import kill
-        kill.main()
+        kill.main(args.chromecast_name)
         return
     with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name, args.media_path)) as pm:
         pm.poll_monitor()
