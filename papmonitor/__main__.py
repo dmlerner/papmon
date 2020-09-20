@@ -41,8 +41,8 @@ def get_args(arg_str=None):
             action='store_true',
             )
     argparser.add_argument('--chromecast_name',
-            #default='bedroom speaker',
-            default='Bike',
+            default='bedroom speaker',
+            #default='Bike',
             nargs='?',
             )
     argparser.add_argument('--media_path',
@@ -94,12 +94,7 @@ def main(arg_str=None):
     logger.debug('main')
     logger.debug(args)
     if args.kill:
-        logger.debug('killing')
-        import pdb
-        #pdb.set_trace()
-        from .utils import kill
-        kill.main(args.chromecast_name)
-        return
+        args.snooze = str(24*60*1000) # 1000 days
     if args.snooze:
         dt = datetime.timedelta(minutes=float(args.snooze))
         logger.debug(f'snoozing for {args.snooze} minutes')

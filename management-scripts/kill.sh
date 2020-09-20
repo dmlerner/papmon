@@ -1,5 +1,7 @@
 #!/usr/bin/sh
 # TODO: make sure chromecast stfus
-python3 -m papmonitor --kill
 pgrep node.*poll-plug.js -f | xargs kill -9 2> /dev/null || echo > /dev/null
+python3 -m papmonitor --kill
+echo 'sleep 5'
+sleep 5 # kill uses snooze logic in papmon, let it run a bit
 pgrep python3.*papmonitor -f | xargs kill -9 2> /dev/null || echo > /dev/null

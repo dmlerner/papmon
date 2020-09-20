@@ -31,6 +31,7 @@ class PAPMonitor:
         self.time_taken_off = None
         self.alarm = alarm
         self.grace_period = grace_period
+        self.unsnooze()
 
     @staticmethod
     def parse_time(s):
@@ -294,6 +295,7 @@ class PAPMonitor:
     def snoozed():
         with open(PAPMonitor.get_snooze_path(), 'r') as f:
             snooze_until = datetime.datetime.fromisoformat(f.read())
+        logger.debug(f'snoozing until: {snooze_until.isoformat()}')
         return datetime.datetime.now() < snooze_until
 
     @staticmethod
