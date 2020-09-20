@@ -295,8 +295,12 @@ class PAPMonitor:
     def snoozed():
         with open(PAPMonitor.get_snooze_path(), 'r') as f:
             snooze_until = datetime.datetime.fromisoformat(f.read())
-        logger.debug(f'snoozing until: {snooze_until.isoformat()}')
-        return datetime.datetime.now() < snooze_until
+        is_snoozed = datetime.datetime.now() < snooze_until
+        if is_snoozed:
+            logger.debug(f'snoozing until: {snooze_until.isoformat()}')
+        else:
+            logger.debug(f'stopped snoozing at: {snooze_until.isoformat()}')
+        return is_snoozed
 
     @staticmethod
     def snooze_until(t=None, dt=None):
