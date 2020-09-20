@@ -52,6 +52,10 @@ def get_args(arg_str=None):
     argparser.add_argument('--kill',
             action='store_true',
             )
+    argparser.add_argument('--snooze',
+            nargs='?',
+            default=False,
+            )
     args = argparser.parse_args(arg_str)
     if args.test == True:
         # be armed always
@@ -95,6 +99,11 @@ def main(arg_str=None):
         #pdb.set_trace()
         from .utils import kill
         kill.main(args.chromecast_name)
+        return
+    if args.snooze:
+        dt = datetime.timedelta(minutes=float(args.snooze))
+        logger.debug(f'snoozing for {args.snooze} minutes')
+        PAPMonitor.snooze_until(dt=dt)
         return
     with contextlib.closing(PAPMonitor.build(args.start, args.stop, args.window, args.grace, args.chromecast_name, args.media_path)) as pm:
         pm.poll_monitor()

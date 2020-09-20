@@ -37,22 +37,33 @@ class PAPMonitor:
         return datetime.time(*map(int, s.split(':')))
 
     @staticmethod
-    def get_latest_data_path():
+    def get_root_path():
         package_folder = str(pathlib.Path(__file__).parent.absolute())
+        return package_folder
+
+    @staticmethod
+    def get_latest_data_path():
         # glob comes out sorted, so this is last alphabetically, ie most recent
-        data_path = glob.glob(str(package_folder) + '/../data/power/*')[-1]
-        return data_path
+        return glob.glob(PAPMonitor.get_data_path()  + '/power/*')[-1]
+
+    @staticmethod
+    def get_data_path():
+        return PAPMonitor.get_root_path() + '/../data'
+
+    @staticmethod
+    def get_snooze_path():
+        return PAPMonitor.get_data_path() + '/snooze.txt'
 
     @staticmethod
     def get_latest_data():
         data_path = PAPMonitor.get_latest_data_path()
         logger.debug('data_path %s', data_path)
-        return open(data_path, 'r') 
+        return open(data_path, 'r')
 
     @staticmethod
     def build(start_str, stop_str, window_duration, grace, chromecast_name, media_path):
         start, stop = map(PAPMonitor.parse_time, (start_str, stop_str))
-        window_duration = PAPMonitor.parse_duration(window_duration) 
+        window_duration = PAPMonitor.parse_duration(window_duration)
         grace = PAPMonitor.parse_duration(grace)
         alarm = Alarm(chromecast_name, media_path)
         return PAPMonitor(None, start, stop, window_duration, grace, alarm)
@@ -146,10 +157,10 @@ class PAPMonitor:
         return data
 
     def stale(self):
-        # TODO: use self.window_duration? 
+        # TODO: use self.window_duration?
         if not self.power_data:
             return False
-        staleness = abs(self.power_data[-1].timestamp - datetime.datetime.now()) 
+        staleness = abs(self.power_data[-1].timestamp - datetime.datetime.now())
         logger.debug('staleness %s %s', self.file.name, staleness)
         msg = 'Data appears to no longer be updating'
         return staleness > datetime.timedelta(minutes=5)
@@ -171,8 +182,7 @@ class PAPMonitor:
 
     def alarm_on(self):
         ''' May check additional criteria, eg phone is at home '''
-        return self.in_active_period()
-
+        return not self.snoozed() and self.in_active_period()
 
     def get_active_period(self, t=None):
         ''' Get last active period not ending before t '''
@@ -255,8 +265,8 @@ class PAPMonitor:
 
 
     def worn_in_active_period(self):
-        # TODO: speed up? 
-        # start at end and work backwords until hit wake time? 
+        # TODO: speed up?
+        # start at end and work backwords until hit wake time?
         logger.debug('worn_in_active_period')
         if not self.in_active_period():
             return False
@@ -272,13 +282,34 @@ class PAPMonitor:
     def wearing_now(self):
         average_power = self.power_data.average_power(
                 now_datetime() - self.window_duration,
-                now_datetime()) 
+                now_datetime())
         wearing = average_power and average_power > self.cutoff_power
         if wearing:
             self.time_taken_off = None
         elif self.time_taken_off is None:
             self.time_taken_off = now_datetime()
         return wearing
+
+    @staticmethod
+    def snoozed():
+        with open(PAPMonitor.get_snooze_path(), 'r') as f:
+            snooze_until = datetime.datetime.fromisoformat(f.read())
+        return datetime.datetime.now() < snooze_until
+
+    @staticmethod
+    def snooze_until(t=None, dt=None):
+        if dt:
+            assert not t
+            assert isinstance(dt, datetime.timedelta)
+            t = datetime.datetime.now() + dt
+        t = t or datetime.datetime.now()
+        assert isinstance(t, datetime.datetime)
+        with open(PAPMonitor.get_snooze_path(), 'w+') as f:
+            f.write(t.isoformat())
+
+    @staticmethod
+    def unsnooze():
+        PAPMonitor.snooze_until() # Now
 
     def __str__(self):
         n = self.file.name if self.file is not None else 'None'
@@ -287,7 +318,7 @@ class PAPMonitor:
 def get_fake_file(should_trigger=True):
     n = 100
     times = [str(time.time() - 3600*5*random.random()) for i in range(n)]
-    powers = [random.random() * 12 for i in range(n)] 
+    powers = [random.random() * 12 for i in range(n)]
     if should_trigger:
         times += [str(time.time() + 1)] # strong on
         powers += [2000000000000]
