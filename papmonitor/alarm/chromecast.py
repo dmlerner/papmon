@@ -188,8 +188,8 @@ def main():
             )
 
     global c, cc, mc, filename
-    #with contextlib.closing(ChromeCast('bedroom speaker')) as c:
-    c = ChromeCast('bedroom speaker')
+    #with contextlib.closing(ChromeCast('Bedroom speaker')) as c:
+    c = ChromeCast('Bedroom speaker')
     #c = ChromeCast('Bike')
     cc = c.get_chromecast()
     mc = cc.media_controller

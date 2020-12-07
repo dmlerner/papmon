@@ -1,4 +1,5 @@
 import argparse
+import datetime
 import pathlib
 import logging
 import datetime
@@ -21,27 +22,27 @@ def get_args(arg_str=None):
             )
     argparser.add_argument('--start',
             help='hours:minutes in military',
-            default='23:00',
+            default='20:00',
             nargs='?',
             )
     argparser.add_argument('--stop',
             help='hours:minutes in military',
-            default='7:00',
+            default='6:00',
             nargs='?',
             )
     argparser.add_argument('--window',
-            default='120s',
+            default='40s',
             nargs='?',
             )
     argparser.add_argument('--grace',
-            default='8m',
+            default='12m',
             nargs='?',
             )
     argparser.add_argument('--test',
             action='store_true',
             )
     argparser.add_argument('--chromecast_name',
-            default='bedroom speaker',
+            default='Bedroom speaker',
             #default='Bike',
             nargs='?',
             )
@@ -92,6 +93,7 @@ def main(arg_str=None):
     for handler in logging.root.handlers:
         handler.addFilter(logging.Filter('papmonitor'))
     logger.debug('main')
+    logger.debug(datetime.datetime.now())
     logger.debug(args)
     if args.kill:
         args.snooze = str(24*60*1000) # 1000 days

@@ -15,8 +15,8 @@ from .utils.utils import *
 class PAPMonitor:
 
     def __init__(self, f, start, stop,
-            window_duration = datetime.timedelta(minutes=10),
-            grace_period = datetime.timedelta(minutes=5),
+            window_duration = datetime.timedelta(minutes=5),
+            grace_period = datetime.timedelta(minutes=10),
             alarm = None,
             cutoff_power = 10,
             ):
@@ -90,7 +90,7 @@ class PAPMonitor:
         if should_trigger:
             stop = (now + datetime.timedelta(hours=1)).strftime('%H:%M')
             filename = 'file:///C:/Users/david/google-drive/coding/papmonitor/papmonitor/alarm/audio.mp3'
-            alarm = Alarm('bedroom speaker', filename)
+            alarm = Alarm('Bedroom speaker', filename)
         else:
             stop = (now - datetime.timedelta(hours=1)).strftime('%H:%M')
             alarm = None
@@ -203,7 +203,7 @@ class PAPMonitor:
         logger.debug('in active period t %s', t)
         t = t or now_datetime()
         if type(t) is datetime.time:
-            return in_active_period(on_today(t))
+            return self.in_active_period(on_today(t))
         assert type(t) is datetime.datetime
 
         start, stop = self.get_active_period(t)
@@ -251,6 +251,7 @@ class PAPMonitor:
             if not should:
                 logger.info('stopping alarm')
                 self.alarm.stop()
+                self.snooze_until(dt=datetime.timedelta(self.grace_period))
         else:
             logger.debug('alarm is not going off')
             if should:
